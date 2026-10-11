@@ -1,0 +1,3496 @@
+/* ==========================================================================
+   NoteScope — Direction B: Editorial Classical Manuscript & Darbar Archive
+   
+   Aesthetic Principles:
+   - Deep warm obsidian canvas (#0C0C0F) with warm bone ivory (#F7F3EE)
+   - Antique Venetian gold (#D4AF37) and warm brass accents
+   - Exquisite typography: Cormorant Garamond (Serif), Plus Jakarta Sans (Clean), JetBrains Mono (Score)
+   - Fine hairline rules, zero neon glows, zero AI slop, museum-grade classical craftsmanship
+   ========================================================================== */
+
+/* --- CSS Reset & Base --- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Editorial Classical Manuscript & Darbar Archive Palette (Permanent Theme) */
+  --bg-canvas: #FAF7F2;
+  --bg-surface: #F5EFE6;
+  --bg-surface-elevated: #EDE5DA;
+  --bg-parchment: #F2ECE2;
+  --bg-subtle: rgba(45, 35, 30, 0.05);
+
+  /* Antique Kumkum Terracotta & Turmeric Gold Tones */
+  --gold-primary: #9B2C2C; /* Kumkum Terracotta Primary */
+  --gold-light: #C07D1E;   /* Turmeric Gold Highlight */
+  --gold-dim: rgba(155, 44, 44, 0.09);
+  --gold-hairline: rgba(155, 44, 44, 0.22);
+  --gold-border: rgba(155, 44, 44, 0.38);
+  --gold-glow: 0 0 20px rgba(155, 44, 44, 0.12);
+  --amber-warm: #C07D1E;
+
+  /* Typography Colors - Deep Sepia, Charred Madder, Rich Charcoal */
+  --text-ivory: #1C1714;
+  --text-primary: #2C221D;
+  --text-secondary: #5E5148;
+  --text-tertiary: #87786E;
+  --text-faint: #B3A59B;
+
+  /* Classical Sketch Rig Variables for Manuscript Paper */
+  --sketch-line: #3D1C1C;
+  --sketch-crease: rgba(61, 28, 28, 0.45);
+  --sketch-fill: rgba(180, 135, 95, 0.16);
+  --sketch-alta: #B22222;
+  --stage-aura: rgba(184, 134, 11, 0.08);
+
+  /* Dividers & Borders */
+  --border-hairline: rgba(45, 35, 30, 0.12);
+  --border-gold: rgba(155, 44, 44, 0.25);
+  --border-active: rgba(155, 44, 44, 0.7);
+
+  /* Radii */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* Typography Families */
+  --font-serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-normal: 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-slow: 400ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-canvas);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.5;
+}
+
+/* Subtle warm parchment atmospheric wash */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 15% 15%, rgba(155, 44, 44, 0.04) 0%, transparent 45%),
+    radial-gradient(circle at 85% 75%, rgba(192, 125, 30, 0.04) 0%, transparent 45%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+#app {
+  position: relative;
+  z-index: 1;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: var(--space-lg) var(--space-xl);
+  min-height: 100vh;
+}
+
+/* ==========================================================================
+   HEADER & MASTHEAD
+   ========================================================================== */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) 0;
+  margin-bottom: var(--space-xl);
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.logo-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--gold-dim);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: var(--gold-primary);
+}
+
+.logo-title-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-text {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-ivory);
+  line-height: 1.1;
+}
+
+.logo-subtext {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-primary);
+  margin-top: 2px;
+}
+
+.logo-badge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-hairline);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 8px 16px;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn:hover {
+  color: var(--text-ivory);
+  border-color: var(--border-gold);
+  background: var(--bg-surface-elevated);
+}
+
+/* ==========================================================================
+   HERO SECTION
+   ========================================================================== */
+/* ==========================================================================
+   HERO SECTION (COMPACT & SHARP)
+   ========================================================================== */
+.hero {
+  text-align: center;
+  max-width: 680px;
+  margin: 14px auto 18px;
+}
+
+.hero h1 {
+  font-family: var(--font-serif);
+  font-size: 2.15rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.18;
+  color: var(--text-ivory);
+  margin-bottom: 5px;
+}
+
+.hero-sub {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* ==========================================================================
+   COMPACT DUAL INPUT DOCK (UPLOAD & SING)
+   ========================================================================== */
+.input-zone {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  max-width: 960px;
+  margin: 0 auto 16px;
+}
+
+@media (max-width: 768px) {
+  .input-zone {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+.input-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 112px;
+  position: relative;
+  transition: all var(--transition-normal);
+  box-shadow: 0 1px 4px rgba(45, 35, 30, 0.04);
+}
+
+#upload-card {
+  border: 1.5px dashed var(--gold-hairline);
+  cursor: pointer;
+}
+
+#upload-card:hover,
+#upload-card.drag-over {
+  border-color: var(--gold-light);
+  background: rgba(192, 125, 30, 0.04);
+  box-shadow: 0 4px 16px rgba(192, 125, 30, 0.08);
+}
+
+#record-card {
+  border: 1px solid var(--border-hairline);
+}
+
+#record-card:hover {
+  border-color: var(--gold-hairline);
+  box-shadow: 0 4px 16px rgba(155, 44, 44, 0.06);
+}
+
+/* Card Header Row */
+.card-header-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-icon-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gold-dim);
+  border: 1px solid var(--gold-hairline);
+  color: var(--gold-primary);
+  flex-shrink: 0;
+}
+
+.card-text-block {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.card-text-block h3 {
+  font-family: var(--font-serif);
+  font-size: 1.12rem;
+  font-weight: 600;
+  color: var(--text-ivory);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.card-sub-hint {
+  font-size: 0.76rem;
+  color: var(--text-tertiary);
+  line-height: 1.3;
+}
+
+/* Card Action Row */
+.card-action-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  z-index: 3;
+}
+
+.upload-browse-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-full);
+  pointer-events: none;
+  transition: all var(--transition-fast);
+}
+
+#upload-card:hover .upload-browse-btn,
+#upload-card.drag-over .upload-browse-btn {
+  background: var(--gold-primary);
+  color: #FFFDF9;
+  border-color: var(--gold-primary);
+}
+
+.sample-take-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  font-family: var(--font-sans);
+  font-size: 0.80rem;
+  font-weight: 600;
+  color: var(--gold-light);
+  background: transparent;
+  border: 1px solid var(--gold-hairline);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.sample-take-btn:hover {
+  background: var(--gold-dim);
+  border-color: var(--gold-light);
+  color: var(--gold-primary);
+}
+
+/* Record Button & Controls */
+.record-btn-compact {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--gold-primary);
+  background: var(--gold-dim);
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all var(--transition-normal);
+}
+
+.record-btn-compact::after {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #E05656;
+  transition: all var(--transition-fast);
+}
+
+.record-btn-compact:hover {
+  transform: scale(1.06);
+  background: rgba(155, 44, 44, 0.16);
+}
+
+.record-btn-compact.recording {
+  border-color: #E05656;
+  box-shadow: 0 0 12px rgba(224, 86, 86, 0.45);
+}
+
+.record-btn-compact.recording::after {
+  border-radius: 2px;
+  transform: scale(0.85);
+}
+
+.recording-meta {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.recording-timer {
+  font-family: var(--font-mono);
+  font-size: 0.80rem;
+  font-weight: 600;
+  color: var(--gold-primary);
+  line-height: 1.1;
+}
+
+.recording-label {
+  font-size: 0.70rem;
+  color: var(--text-tertiary);
+  line-height: 1.1;
+}
+
+.live-visualizer-compact {
+  width: 110px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#live-canvas {
+  width: 100%;
+  height: 22px;
+}
+
+.live-singing-subtitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-sm);
+}
+
+.live-sub-tag {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  color: var(--gold-primary);
+  font-weight: 600;
+}
+
+.live-sub-content {
+  font-family: var(--font-serif);
+  font-size: 0.90rem;
+  font-weight: 600;
+  color: var(--text-ivory);
+}
+
+.live-sub-placeholder {
+  font-size: 0.76rem;
+  font-family: var(--font-sans);
+  color: var(--text-tertiary);
+}
+
+.file-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.file-info {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  color: var(--gold-light);
+  margin-top: 6px;
+}
+
+.file-info.visible {
+  display: inline-flex;
+}
+
+.file-dot {
+  color: var(--gold-primary);
+  font-size: 0.65rem;
+}
+
+.file-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-size-badge {
+  font-family: var(--font-mono);
+  font-size: 0.70rem;
+  color: var(--text-tertiary);
+}
+
+/* ==========================================================================
+   ANALYZE ACTION ZONE
+   ========================================================================== */
+.analyze-zone {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.analyze-btn {
+  padding: 11px 34px;
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(155, 44, 44, 0.4);
+  background: linear-gradient(135deg, #9B2C2C 0%, #B83232 50%, #C07D1E 100%);
+  color: #FFFDF9;
+  cursor: pointer;
+  box-shadow: 0 3px 14px rgba(155, 44, 44, 0.24), 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: all var(--transition-normal);
+}
+
+.analyze-btn:hover {
+  background: linear-gradient(135deg, #A83232 0%, #C63939 50%, #D48B25 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 20px rgba(155, 44, 44, 0.32), 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.analyze-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ==========================================================================
+   PROCESSING OVERLAY
+   ========================================================================== */
+.processing-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(44, 34, 29, 0.75);
+  backdrop-filter: blur(8px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.processing-overlay.visible {
+  display: flex;
+}
+
+.processing-content {
+  text-align: center;
+  max-width: 360px;
+}
+
+.processing-spinner {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid rgba(155, 44, 44, 0.15);
+  border-top-color: var(--gold-primary);
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto var(--space-md);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.processing-title {
+  font-family: var(--font-serif);
+  font-size: 1.45rem;
+  color: var(--text-ivory);
+  margin-bottom: 6px;
+}
+
+.processing-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-md);
+}
+
+.processing-progress {
+  height: 4px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.processing-progress-bar {
+  height: 100%;
+  background: var(--gold-primary);
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+/* ==========================================================================
+   RESULTS SECTION (DIRECTION B: EDITORIAL CLASSICAL MANUSCRIPT)
+   ========================================================================== */
+.analysis-section {
+  display: block;
+  opacity: 1;
+  margin-top: 10px;
+}
+
+/* --- Editorial Masthead: Root Sa & Raga Profile --- */
+.tonic-banner {
+  display: none;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md) var(--space-lg);
+  margin-bottom: var(--space-lg);
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+.tonic-banner.visible {
+  display: flex;
+}
+
+.tonic-main {
+  display: flex;
+  flex-direction: column;
+}
+
+.tonic-tag {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: var(--gold-primary);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.tonic-value {
+  font-family: var(--font-serif);
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: var(--text-ivory);
+  line-height: 1.1;
+}
+
+.tonic-ref {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.tonic-stats {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xl);
+  flex-wrap: wrap;
+}
+
+.tonic-stat-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.tonic-stat-item .label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: 2px;
+}
+
+.tonic-stat-item .val {
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--text-ivory);
+}
+
+/* ==========================================================================
+   CARNATIC TALA STUDIO CARD (MANUSCRIPT SCORE & LINE-ART HAND)
+   ========================================================================== */
+.carnatic-tala-studio-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  margin-bottom: var(--space-xl);
+  box-shadow: 0 12px 32px rgba(45, 35, 30, 0.06);
+}
+
+.carnatic-studio-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border-hairline);
+  padding-bottom: var(--space-md);
+}
+
+.carnatic-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.carnatic-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-primary);
+}
+
+.carnatic-raga-title {
+  font-family: var(--font-serif);
+  font-size: 1.85rem;
+  font-weight: 600;
+  color: var(--text-ivory);
+  letter-spacing: 0.01em;
+}
+
+.carnatic-raga-scale {
+  font-family: var(--font-mono);
+  font-size: 0.86rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.scale-label {
+  color: var(--text-tertiary);
+}
+
+/* Editorial Mode Tabs */
+.carnatic-mode-switcher {
+  display: flex;
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-full);
+  padding: 3px;
+  gap: 4px;
+}
+
+.carnatic-mode-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 7px 16px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.carnatic-mode-btn:hover {
+  color: var(--text-ivory);
+}
+
+.carnatic-mode-btn.active {
+  background: var(--gold-dim);
+  border: 1px solid var(--gold-primary);
+  color: var(--gold-primary);
+}
+
+.mode-tala-icon,
+.mode-free-icon {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: -0.05em;
+  color: var(--gold-primary);
+  opacity: 0.85;
+}
+
+/* --- Classical Line-Art Tala Hand Widget --- */
+.classical-tala-widget {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.tala-widget-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+  border-bottom: 1px dashed var(--border-hairline);
+  padding-bottom: var(--space-sm);
+}
+
+.tala-heading-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.tala-meta-label {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  color: var(--gold-primary);
+  text-transform: uppercase;
+}
+
+.tala-classical-title {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-ivory);
+}
+
+.tala-kriya-display {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.kriya-script-tamil {
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--gold-primary);
+}
+
+.kriya-divider {
+  color: var(--text-tertiary);
+}
+
+.kriya-name-english {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+.tala-meter-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.tala-anga-caption {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+}
+
+.tala-bead-meter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tala-bead-meter .tala-bead {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-hairline);
+  transition: all 0.15s ease;
+}
+
+.tala-bead-meter .tala-bead.active {
+  background: var(--gold-primary);
+  border-color: var(--gold-light);
+  box-shadow: 0 0 10px rgba(155, 44, 44, 0.4);
+  transform: scale(1.35);
+}
+
+.bead-sep {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--border-gold);
+  margin: 0 1px;
+}
+
+/* Classical Hand Illustration Stage */
+.tala-illustration-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xs) 0;
+}
+
+.classical-hand-svg {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  overflow: visible;
+  transition: transform 0.15s ease-out;
+}
+
+/* Hand Gesture States & Subtle Kinetic Animations */
+.classical-hand-svg.thattu-state .classical-hand-group {
+  transform: translateY(6px);
+  transition: transform 0.08s cubic-bezier(0.2, 0.8, 0.3, 1.2);
+}
+
+.classical-hand-svg.thattu-state .motion-strike {
+  opacity: 1;
+  animation: strikePulse 0.4s ease-out;
+}
+
+.classical-hand-svg:not(.thattu-state) .motion-strike {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes strikePulse {
+  0% { transform: scale(0.9); opacity: 1; }
+  100% { transform: scale(1.15); opacity: 0; }
+}
+
+.classical-hand-svg.pinky-state #finger-pinky {
+  transform: translateY(6px);
+  transition: transform 0.12s ease-out;
+}
+
+.classical-hand-svg.pinky-state .motion-pinky {
+  opacity: 1;
+}
+
+.classical-hand-svg:not(.pinky-state) .motion-pinky {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.classical-hand-svg.ring-state #finger-ring {
+  transform: translateY(6px);
+  transition: transform 0.12s ease-out;
+}
+
+.classical-hand-svg.ring-state .motion-ring {
+  opacity: 1;
+}
+
+.classical-hand-svg:not(.ring-state) .motion-ring {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.classical-hand-svg.middle-state #finger-middle {
+  transform: translateY(6px);
+  transition: transform 0.12s ease-out;
+}
+
+.classical-hand-svg.middle-state .motion-middle {
+  opacity: 1;
+}
+
+.classical-hand-svg:not(.middle-state) .motion-middle {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.classical-hand-svg.veechu-state .classical-hand-group {
+  transform: translateY(-6px) rotate(-4deg);
+  transition: transform 0.22s ease-out;
+}
+
+.classical-hand-svg.veechu-state .motion-veechu {
+  opacity: 1;
+  animation: waveMotion 0.6s ease-in-out infinite alternate;
+}
+
+.classical-hand-svg:not(.veechu-state) .motion-veechu {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes waveMotion {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 8; }
+}
+
+.tala-action-subtext {
+  text-align: center;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  margin-top: var(--space-xs);
+}
+
+/* --- Tala Specification Banner (Classical Treatise Layout) --- */
+.tala-spec-banner {
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-sm);
+  padding: 12px 18px;
+  font-family: var(--font-mono);
+  margin-bottom: var(--space-lg);
+}
+
+.tala-spec-row {
+  display: flex;
+  align-items: center;
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+.tala-spec-row.title-row {
+  justify-content: space-between;
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--gold-primary);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+}
+
+.spec-anga.laghu {
+  flex: 4;
+  color: var(--text-primary);
+}
+
+.spec-anga.dhrutam {
+  flex: 2;
+  color: var(--text-primary);
+}
+
+.spec-anga.dhrutam2 {
+  flex: 2;
+  color: var(--text-primary);
+}
+
+.spec-akshara-group.laghu-beats {
+  flex: 4;
+  color: var(--gold-primary);
+  letter-spacing: 0.15em;
+}
+
+.spec-akshara-group.dhrutam-beats {
+  flex: 2;
+  color: var(--gold-primary);
+  letter-spacing: 0.15em;
+}
+
+.spec-akshara-group.dhrutam2-beats {
+  flex: 2;
+  color: var(--gold-primary);
+  letter-spacing: 0.15em;
+}
+
+/* --- Tala Avartanams Grid Sheet (Manuscript Score) --- */
+.tala-avartanams-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.avartanam-card {
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  transition: border-color var(--transition-fast);
+}
+
+.avartanam-card.active-avartanam {
+  border-color: var(--border-gold);
+}
+
+.avartanam-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
+}
+
+.avartanam-number {
+  font-weight: 600;
+  color: var(--gold-primary);
+}
+
+.avartanam-grid-table {
+  display: flex;
+  align-items: stretch;
+  background: var(--bg-surface);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  overflow: hidden;
+}
+
+.anga-block {
+  display: flex;
+  align-items: stretch;
+}
+
+.anga-block.laghu-block {
+  flex: 4;
+  border-right: 2px solid var(--gold-primary);
+}
+
+.anga-block.dhrutam1-block {
+  flex: 2;
+  border-right: 2px solid var(--gold-primary);
+}
+
+.anga-block.dhrutam2-block {
+  flex: 2;
+  border-right: 3px double var(--gold-primary);
+}
+
+.akshara-cell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 6px;
+  border-right: 1px solid var(--border-hairline);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.akshara-cell:hover {
+  background: var(--bg-surface-elevated);
+}
+
+.akshara-cell.active-akshara {
+  background: linear-gradient(135deg, rgba(155, 44, 44, 0.12), rgba(192, 125, 30, 0.18));
+  box-shadow: inset 0 0 12px rgba(155, 44, 44, 0.15);
+}
+
+.cell-beat-num {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-tertiary);
+  margin-bottom: 4px;
+}
+
+.cell-swara {
+  font-family: var(--font-serif);
+  font-size: 1.45rem;
+  font-weight: 600;
+  color: var(--text-ivory);
+  line-height: 1;
+}
+
+.akshara-cell.active-akshara .cell-swara {
+  color: var(--gold-primary);
+  text-shadow: 0 0 8px rgba(155, 44, 44, 0.25);
+}
+
+.cell-swara.karvai {
+  color: var(--text-tertiary);
+  font-size: 1.5rem;
+}
+
+.cell-swara.semicolon {
+  color: var(--gold-primary);
+  font-size: 1.5rem;
+}
+
+.cell-swara.overline {
+  border-top: 1.5px solid currentColor;
+  padding-top: 2px;
+  display: inline-block;
+  line-height: 1.1;
+}
+
+.cell-swara.double-overline {
+  border-top: 3.5px double currentColor;
+  padding-top: 2px;
+  display: inline-block;
+  line-height: 1.1;
+}
+
+.cell-kriya-mini {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--text-tertiary);
+  margin-top: 5px;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  text-transform: uppercase;
+}
+
+.cell-kriya-mini .kriya-symbol {
+  color: var(--gold-primary);
+  font-weight: 700;
+  font-size: 0.72rem;
+}
+
+/* --- Free-Flow (Alapana) Mode --- */
+.freeflow-info-banner {
+  background: rgba(212, 175, 55, 0.04);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-sm);
+  padding: 12px 18px;
+  margin-bottom: var(--space-md);
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.freeflow-banner-lead {
+  font-family: var(--font-serif);
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: var(--gold-light);
+  letter-spacing: 0.02em;
+  margin-right: 4px;
+}
+
+.freeflow-phrases-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.freeflow-phrase-card {
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  padding: var(--space-md) var(--space-lg);
+  transition: border-color var(--transition-fast);
+}
+
+.freeflow-phrase-card.active-phrase {
+  border-color: var(--border-gold);
+  background: rgba(212, 175, 55, 0.04);
+}
+
+.phrase-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--text-tertiary);
+}
+
+.phrase-index {
+  color: var(--gold-primary);
+  font-weight: 600;
+}
+
+.phrase-sargam-box {
+  font-family: var(--font-serif);
+  font-size: 1.65rem;
+  font-weight: 600;
+  color: var(--text-ivory);
+  letter-spacing: 0.08em;
+  padding: 10px 14px;
+  background: var(--bg-surface);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-hairline);
+}
+
+.phrase-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.phrase-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-hairline);
+  padding: 4px 8px;
+  border-radius: var(--radius-xs);
+  font-family: var(--font-serif);
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.phrase-chip:hover {
+  border-color: var(--gold-primary);
+  color: var(--text-ivory);
+}
+
+/* ==========================================================================
+   CINEMA SUNG NOTE SUBTITLE CARD
+   ========================================================================== */
+.subtitle-display-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-xl);
+}
+
+.subtitle-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+}
+
+.subtitle-badge {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--gold-primary);
+  text-transform: uppercase;
+}
+
+.subtitle-timing {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+}
+
+.subtitle-body {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xl);
+  margin-bottom: var(--space-md);
+}
+
+@media (max-width: 640px) {
+  .subtitle-body {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.subtitle-swara-giant {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  position: relative;
+}
+
+.sub-swara-name {
+  font-family: var(--font-serif);
+  font-size: 3.5rem;
+  font-weight: 600;
+  color: var(--gold-light);
+  line-height: 1;
+}
+
+.sub-swara-devanagari {
+  font-family: var(--font-serif);
+  font-size: 2.2rem;
+  color: var(--text-tertiary);
+}
+
+.sub-saptak-dot {
+  font-size: 1.6rem;
+  color: var(--gold-primary);
+}
+
+.subtitle-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.sub-full-name {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-ivory);
+}
+
+.sub-meta-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+}
+
+.sub-cents-badge {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.sub-cents-badge.in-tune {
+  background: rgba(46, 204, 113, 0.12);
+  color: #2ECC71;
+  border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.sub-cents-badge.flat {
+  background: rgba(241, 196, 15, 0.12);
+  color: #F1C40F;
+  border: 1px solid rgba(241, 196, 15, 0.3);
+}
+
+.sub-cents-badge.sharp {
+  background: rgba(231, 76, 60, 0.12);
+  color: #E74C3C;
+  border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+.sub-gamaka-badge {
+  font-family: var(--font-mono);
+  font-size: 0.70rem;
+  font-weight: 500;
+  padding: 2px 9px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.sub-gamaka-badge.gamaka-kampitam {
+  background: rgba(162, 155, 254, 0.15);
+  color: #A29BFE;
+  border: 1px solid rgba(162, 155, 254, 0.35);
+  box-shadow: 0 0 10px rgba(162, 155, 254, 0.15);
+}
+
+.sub-gamaka-badge.gamaka-jaaru {
+  background: rgba(0, 206, 201, 0.15);
+  color: #00CEC9;
+  border: 1px solid rgba(0, 206, 201, 0.35);
+}
+
+.sub-gamaka-badge.gamaka-karvai {
+  background: rgba(253, 203, 110, 0.15);
+  color: #FDCB6E;
+  border: 1px solid rgba(253, 203, 110, 0.35);
+}
+
+.sub-gamaka-badge.gamaka-steady {
+  background: rgba(223, 230, 233, 0.10);
+  color: #DFE6E9;
+  border: 1px solid rgba(223, 230, 233, 0.25);
+}
+
+.swara-block-gamaka {
+  font-size: 0.65rem;
+  color: var(--gold-primary);
+  margin-left: 2px;
+  opacity: 0.85;
+}
+
+.sub-cents-meter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 320px;
+  margin-top: 4px;
+}
+
+.cents-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-tertiary);
+}
+
+.cents-track {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-full);
+  position: relative;
+}
+
+.cents-center-zone {
+  position: absolute;
+  left: 45%;
+  right: 45%;
+  top: 0;
+  bottom: 0;
+  background: rgba(46, 204, 113, 0.4);
+}
+
+.cents-needle {
+  position: absolute;
+  top: -3px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--gold-primary);
+  transform: translateX(-50%);
+  transition: left 0.1s ease;
+}
+
+.subtitle-ribbon-wrapper {
+  overflow-x: auto;
+  padding: 4px 0;
+  scrollbar-width: thin;
+}
+
+.subtitle-ribbon {
+  display: flex;
+  gap: 8px;
+  min-width: min-content;
+}
+
+.sub-ribbon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 12px;
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.sub-ribbon-item.active {
+  border-color: var(--gold-primary);
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.sub-ribbon-item strong {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  color: var(--text-ivory);
+}
+
+.sub-ribbon-item span {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+}
+
+/* ==========================================================================
+   AUDIO WAVEFORM & HORIZONTAL SWARAS TRACK
+   ========================================================================== */
+.waveform-container {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-xl);
+}
+
+.waveform-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+}
+
+.waveform-title {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: var(--gold-primary);
+  text-transform: uppercase;
+}
+
+.waveform-time {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.waveform-time .current {
+  color: var(--gold-primary);
+  font-weight: 600;
+}
+
+#waveform {
+  margin-bottom: var(--space-md);
+}
+
+/* Horizontal Swaras Track Aligned Under Waveform */
+.horizontal-swaras-section {
+  border-top: 1px solid var(--border-hairline);
+  padding-top: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.horizontal-swaras-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.horizontal-swaras-title {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  color: var(--gold-primary);
+}
+
+.horizontal-swaras-hint {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+}
+
+.horizontal-swaras-track-wrapper {
+  position: relative;
+  background: var(--bg-canvas);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-hairline);
+  padding: 10px 0 28px 0;
+  overflow: hidden;
+}
+
+.horizontal-swaras-track {
+  position: relative;
+  height: 52px;
+  width: 100%;
+}
+
+.horizontal-swaras-playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--gold-primary);
+  box-shadow: 0 0 8px var(--gold-primary);
+  z-index: 10;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.horizontal-swaras-blocks {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.horizontal-swara-block {
+  position: absolute;
+  top: 0;
+  height: 48px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-xs);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 2px 4px;
+  transition: all 0.15s ease;
+}
+
+.horizontal-swara-block:hover {
+  border-color: var(--gold-primary);
+  background: var(--bg-surface);
+}
+
+@keyframes swaraPulse {
+  0%   { box-shadow: 0 0 8px rgba(155, 44, 44, 0.3), 0 0 2px rgba(212, 175, 55, 0.5); }
+  50%  { box-shadow: 0 0 18px rgba(155, 44, 44, 0.55), 0 0 8px rgba(212, 175, 55, 0.7); }
+  100% { box-shadow: 0 0 8px rgba(155, 44, 44, 0.3), 0 0 2px rgba(212, 175, 55, 0.5); }
+}
+
+.horizontal-swara-block.active-sung-note {
+  background: linear-gradient(135deg, rgba(155, 44, 44, 0.18), rgba(212, 175, 55, 0.22));
+  border-color: var(--gold-primary);
+  border-width: 2px;
+  transform: translateY(-3px) scaleX(1.02);
+  animation: swaraPulse 1.2s ease-in-out infinite;
+  z-index: 5;
+}
+
+.horizontal-swara-block.active-sung-note .swara-block-name {
+  color: #D4AF37;
+  text-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
+}
+
+.swara-block-top {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.swara-block-name {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-ivory);
+}
+
+.swara-block-devanagari {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+}
+
+.swara-block-hz {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--gold-primary);
+}
+
+.horizontal-swaras-ruler {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 18px;
+  border-top: 1px solid var(--border-hairline);
+}
+
+.ruler-tick {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 4px;
+  background: var(--text-tertiary);
+}
+
+.ruler-tick.major {
+  height: 8px;
+  background: var(--gold-primary);
+}
+
+.ruler-label {
+  position: absolute;
+  top: 5px;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-tertiary);
+  transform: translateX(-50%);
+}
+
+.playback-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+}
+
+.play-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid var(--gold-primary);
+  background: var(--gold-dim);
+  color: var(--gold-primary);
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.play-btn:hover {
+  background: rgba(155, 44, 44, 0.16);
+  transform: scale(1.05);
+}
+
+.speed-btn {
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-xs);
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.speed-btn:hover, .speed-btn.active {
+  color: var(--gold-primary);
+  border-color: var(--border-gold);
+}
+
+/* ==========================================================================
+   RESULTS ACTION BAR (BOTTOM TOOLBAR)
+   ========================================================================== */
+.results-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+  margin-bottom: var(--space-3xl);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-hairline);
+}
+
+.export-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.btn-export-midi {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-gold);
+  color: var(--gold-primary);
+}
+
+.btn-export-midi:hover {
+  background: var(--bg-surface);
+  border-color: var(--gold-primary);
+  box-shadow: 0 2px 8px rgba(155, 44, 44, 0.12);
+}
+
+.btn-export-json {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  color: var(--text-secondary);
+}
+
+.btn-export-json:hover {
+  color: var(--text-ivory);
+  border-color: var(--border-gold);
+}
+
+/* ==========================================================================
+   MODAL DIALOG (ABOUT)
+   ========================================================================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(44, 34, 29, 0.65);
+  backdrop-filter: blur(8px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 150;
+  padding: var(--space-md);
+}
+
+.modal-overlay.visible {
+  display: flex;
+}
+
+.modal-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-lg);
+  max-width: 600px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 16px 40px rgba(45, 35, 30, 0.15);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-lg);
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+.modal-header h3 {
+  font-family: var(--font-serif);
+  font-size: 1.45rem;
+  color: var(--text-ivory);
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+
+.modal-close:hover {
+  color: var(--text-ivory);
+}
+
+.modal-body {
+  padding: var(--space-lg);
+}
+
+.modal-body h4 {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  color: var(--gold-primary);
+  margin-top: var(--space-md);
+  margin-bottom: var(--space-xs);
+}
+
+.modal-body h4:first-child {
+  margin-top: 0;
+}
+
+.modal-body p {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.tech-badge-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.tech-badge {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-hairline);
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 1px 3px rgba(45, 35, 30, 0.05);
+}
+
+/* --- Toast Notification --- */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  padding: 10px 20px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-full);
+  color: var(--text-ivory);
+  font-size: 0.85rem;
+  z-index: 300;
+  transition: transform 0.3s ease;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.toast.visible {
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast.error {
+  border-color: #E05656;
+  color: #FF8A8A;
+}
+
+/* ==========================================================================
+   MASTER CLASSICAL CARNATIC STAGE & TOP TALA SHOWCASE (MANUSCRIPT ARCHIVE)
+   ========================================================================== */
+.classical-obsidian-stage {
+  background: linear-gradient(180deg, #F8F3EC 0%, #EFE7DC 100%);
+  border: 1px solid rgba(155, 44, 44, 0.25);
+  border-radius: 20px;
+  padding: 44px 32px 36px 32px;
+  margin-bottom: var(--space-xl);
+  box-shadow: 0 12px 40px rgba(45, 35, 30, 0.08);
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+}
+
+/* --- Classical Masthead Header --- */
+.classical-stage-header {
+  margin-bottom: 8px;
+}
+
+.stage-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.classical-stage-title {
+  font-family: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
+  font-size: 2.2rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: #2C221D;
+  margin-bottom: 0;
+  text-shadow: none;
+}
+
+.tala-selector-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(155, 44, 44, 0.25);
+  padding: 5px 12px;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.tala-selector-wrap:hover {
+  border-color: rgba(155, 44, 44, 0.45);
+  box-shadow: 0 3px 12px rgba(155, 44, 44, 0.08);
+}
+
+.tala-select-label {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #9B2C2C;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  user-select: none;
+}
+
+.classical-tala-select {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #2D231E;
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.classical-tala-select option {
+  background: #FDFBF7;
+  color: #2D231E;
+  font-size: 0.82rem;
+}
+
+.tala-auto-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #047857;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 2px 8px;
+  border-radius: 12px;
+  letter-spacing: 0.02em;
+}
+
+[data-theme="dark"] .tala-selector-wrap {
+  background: rgba(28, 24, 22, 0.85);
+  border-color: rgba(212, 163, 89, 0.3);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .tala-select-label {
+  color: #D4A359;
+}
+
+[data-theme="dark"] .classical-tala-select {
+  color: #F5EFEB;
+}
+
+[data-theme="dark"] .classical-tala-select option {
+  background: #1C1816;
+  color: #F5EFEB;
+}
+
+[data-theme="dark"] .tala-auto-badge {
+  color: #34D399;
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(52, 211, 153, 0.35);
+}
+
+.classical-stage-subtitle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #9B2C2C;
+  margin-bottom: 12px;
+}
+
+/* --- Hand Vector Art Canvas Wrapper --- */
+.classical-hand-canvas-wrap {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.carnatic-stage-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.carnatic-hand-svg {
+  width: 100%;
+  max-height: 320px;
+  height: auto;
+  border-radius: 18px;
+  background: #FAF5EC;
+  border: 1px solid rgba(184, 134, 11, 0.35);
+  box-shadow: 0 16px 40px -10px rgba(90, 60, 30, 0.15),
+              inset 0 0 30px rgba(184, 134, 11, 0.06);
+  filter: drop-shadow(0 12px 24px rgba(90, 60, 30, 0.12));
+  transition: all 0.3s ease;
+}
+
+.top-showcase-stage .carnatic-hand-svg {
+  max-height: 280px;
+  width: 100%;
+  max-width: 580px;
+}
+
+.stage-bg-rect {
+  fill: #FAF5EC;
+  transition: fill 0.3s ease;
+}
+
+/* Manuscript Sketch Artwork Display */
+.mudra-art {
+  display: block;
+}
+
+.carnatic-hand-svg path[stroke="#F0EBE1"] {
+  stroke: #7A2828;
+}
+
+.carnatic-hand-svg path[stroke="rgba(240, 235, 225, 0.45)"],
+.carnatic-hand-svg path[stroke="rgba(240, 235, 225, 0.6)"],
+.carnatic-hand-svg path[stroke="rgba(240, 235, 225, 0.75)"],
+.carnatic-hand-svg path[stroke="rgba(240, 235, 225, 0.35)"] {
+  stroke: rgba(155, 44, 44, 0.5);
+}
+
+.top-showcase-stage .kriya-subtitle-bar {
+  margin-top: 6px;
+  margin-bottom: 10px;
+}
+
+.sketch-contour {
+  stroke: var(--sketch-line);
+  stroke-width: 2.2px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  transition: stroke 0.3s ease;
+}
+
+.sketch-line-thick {
+  stroke: var(--sketch-line);
+  stroke-width: 2.4px;
+  stroke-linecap: round;
+  fill: none;
+  transition: stroke 0.3s ease;
+}
+
+.sketch-crease {
+  stroke: var(--sketch-crease);
+  stroke-width: 1.1px;
+  stroke-linecap: round;
+  fill: none;
+  transition: stroke 0.3s ease;
+}
+
+.sketch-fill {
+  fill: var(--sketch-fill);
+  transition: fill 0.3s ease;
+}
+
+.sketch-alta {
+  fill: var(--sketch-alta);
+  opacity: 0.88;
+  transition: fill 0.3s ease;
+}
+
+.stage-ambient-aura {
+  fill: var(--stage-aura);
+  transition: fill 0.3s ease;
+}
+
+.kriya-subtitle-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: -6px;
+  margin-bottom: 18px;
+}
+
+.kriya-tag-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #9B2C2C;
+  background: rgba(155, 44, 44, 0.1);
+  border: 1px solid rgba(155, 44, 44, 0.3);
+  padding: 3px 12px;
+  border-radius: var(--radius-full);
+}
+
+.kriya-action-desc {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.95rem;
+  font-style: italic;
+  color: #5E5148;
+}
+
+/* --- Master Top Tala Showcase Pavilion (Manuscript Paper) --- */
+.top-tala-showcase {
+  width: 100%;
+  max-width: 960px;
+  margin: 14px auto 20px auto;
+  background: linear-gradient(145deg, #F4EFE6 0%, #EFE7DA 100%);
+  border: 1px solid rgba(184, 134, 11, 0.35);
+  border-radius: 20px;
+  padding: 18px 24px 16px 24px;
+  box-shadow: 0 12px 32px rgba(80, 50, 20, 0.08), 0 0 16px rgba(184, 134, 11, 0.06);
+  position: relative;
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.top-tala-showcase::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(184, 134, 11, 0.35), transparent 40%, rgba(155, 44, 44, 0.25));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.top-tala-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 8px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(184, 134, 11, 0.2);
+}
+
+.top-tala-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: #7A2828;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.gold-sparkle {
+  color: #B8860B;
+  font-size: 0.75rem;
+}
+
+.top-tala-heading {
+  font-family: 'Cinzel', serif;
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: linear-gradient(135deg, #7A2828 0%, #9B2C2C 50%, #B8860B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0 0 2px 0;
+}
+
+.top-tala-subheading {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.96rem;
+  font-style: italic;
+  color: #5C4A3A;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.top-tala-tempo-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  background: rgba(122, 40, 40, 0.08);
+  border: 1px solid rgba(122, 40, 40, 0.35);
+  border-radius: var(--radius-full);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.74rem;
+  font-style: normal;
+  color: #7A2828;
+  letter-spacing: 0.02em;
+  transition: all 0.3s ease;
+}
+
+.top-tala-tempo-pill strong {
+  color: #4A1208;
+  font-weight: 700;
+}
+
+.top-tala-tempo-pill.highlight-pulse {
+  animation: tempoPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes tempoPulse {
+  0% { box-shadow: 0 0 0 0 rgba(155, 44, 44, 0.5); }
+  70% { box-shadow: 0 0 0 8px rgba(155, 44, 44, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(155, 44, 44, 0); }
+}
+
+.anga-hl {
+  color: #7A2828;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.top-tala-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tala-play-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  background: linear-gradient(135deg, rgba(155, 44, 44, 0.12), rgba(184, 134, 11, 0.22));
+  border: 1px solid rgba(155, 44, 44, 0.45);
+  border-radius: var(--radius-full);
+  color: #7A2828;
+  font-family: 'Cinzel', serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: 0 0 12px rgba(155, 44, 44, 0.12);
+}
+
+.tala-play-btn:hover {
+  background: linear-gradient(135deg, rgba(155, 44, 44, 0.22), rgba(184, 134, 11, 0.32));
+  border-color: #7A2828;
+  box-shadow: 0 0 16px rgba(155, 44, 44, 0.25);
+  transform: translateY(-1px);
+}
+
+.tala-play-btn.playing {
+  background: linear-gradient(135deg, rgba(155, 44, 44, 0.25), rgba(184, 134, 11, 0.35));
+  border-color: #7A2828;
+}
+
+.tala-play-icon {
+  font-size: 0.85rem;
+}
+
+.tala-tempo-group {
+  display: flex;
+  background: rgba(240, 233, 221, 0.9);
+  border: 1px solid rgba(184, 134, 11, 0.3);
+  border-radius: var(--radius-full);
+  padding: 3px;
+  gap: 2px;
+}
+
+.tala-tempo-btn {
+  background: transparent;
+  border: none;
+  color: #5C4A3A;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tala-tempo-btn:hover {
+  color: #7A2828;
+  background: rgba(184, 134, 11, 0.12);
+}
+
+.tala-tempo-btn.active {
+  background: rgba(155, 44, 44, 0.18);
+  color: #7A2828;
+  font-weight: 600;
+  box-shadow: 0 0 8px rgba(155, 44, 44, 0.2);
+}
+
+#tempo-auto {
+  border: 1px solid rgba(184, 134, 11, 0.35);
+}
+
+#tempo-auto.active {
+  background: rgba(155, 44, 44, 0.18);
+  border-color: #7A2828;
+  color: #4A1208;
+  box-shadow: 0 0 10px rgba(155, 44, 44, 0.25);
+}
+
+.tempo-sparkle {
+  color: #9B2C2C;
+  font-size: 0.7rem;
+  margin-right: 2px;
+}
+
+.tala-sound-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(240, 233, 221, 0.9);
+  border: 1px solid rgba(184, 134, 11, 0.3);
+  border-radius: var(--radius-full);
+  color: #5C4A3A;
+  padding: 6px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tala-sound-btn:hover {
+  border-color: #7A2828;
+  color: #7A2828;
+}
+
+.tala-sound-btn.muted {
+  opacity: 0.6;
+}
+
+.top-tala-hand-stage {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+}
+
+/* 8 Adi Tala Beads Bar (Manuscript Paper) */
+.top-tala-beads-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin: 6px 0 10px 0;
+  flex-wrap: wrap;
+}
+
+.tala-anga-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.tala-anga-label {
+  font-family: 'Cinzel', serif;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: rgba(122, 40, 40, 0.8);
+}
+
+.tala-beads-row {
+  display: flex;
+  gap: 7px;
+}
+
+.tala-anga-divider {
+  font-family: 'Cinzel', serif;
+  font-size: 1.3rem;
+  font-weight: 300;
+  color: rgba(184, 134, 11, 0.45);
+  margin-top: 12px;
+  user-select: none;
+}
+
+.tala-bead {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 48px;
+  background: #EFE8DC;
+  border: 1px solid rgba(184, 134, 11, 0.28);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+  padding: 4px;
+}
+
+.tala-bead:hover {
+  border-color: rgba(155, 44, 44, 0.45);
+  background: #E8DECE;
+  transform: translateY(-2px);
+}
+
+.tala-bead.active {
+  background: linear-gradient(135deg, rgba(155, 44, 44, 0.18), rgba(184, 134, 11, 0.32));
+  border: 1.5px solid #7A2828;
+  box-shadow: 0 0 14px rgba(155, 44, 44, 0.25);
+  transform: translateY(-2px) scale(1.04);
+}
+
+.bead-num {
+  font-family: 'Cinzel', serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #2C241E;
+  line-height: 1;
+}
+
+.tala-bead.active .bead-num {
+  color: #7A2828;
+}
+
+.bead-kriya {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  color: #6C5A4B;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+
+.tala-bead.active .bead-kriya {
+  color: #7A2828;
+}
+
+.tala-progress-bar-track {
+  width: 100%;
+  height: 3px;
+  background: rgba(184, 134, 11, 0.18);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-top: 6px;
+}
+
+.tala-progress-bar-fill {
+  height: 100%;
+  width: 12.5%;
+  background: linear-gradient(90deg, #9B2C2C, #B8860B);
+  border-radius: var(--radius-full);
+  box-shadow: 0 0 8px rgba(155, 44, 44, 0.4);
+  transition: width 0.2s linear;
+}
+
+/* --- Golden Architectural Tala Scoreboard (Manuscript Paper) --- */
+.classical-score-board {
+  width: 100%;
+  max-width: 880px;
+  margin: 10px auto 24px auto;
+  padding: 0 10px;
+}
+
+.score-anga-header {
+  display: flex;
+  align-items: center;
+  padding-bottom: 8px;
+  width: 100%;
+}
+
+.score-anga-col {
+  font-family: 'Cormorant Garamond', 'Cinzel', serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #9B2C2C;
+  text-align: center;
+  min-width: 0;
+}
+
+.score-col-divider {
+  font-family: 'Cinzel', serif;
+  font-size: 1.25rem;
+  font-weight: 300;
+  color: rgba(155, 44, 44, 0.4);
+  padding: 0 6px;
+  user-select: none;
+  flex: 0 0 auto;
+}
+
+.score-gold-divider-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(155, 44, 44, 0.3) 15%, rgba(155, 44, 44, 0.6) 50%, rgba(155, 44, 44, 0.3) 85%, transparent 100%);
+  margin-bottom: 12px;
+}
+
+.score-avartanams-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.score-avartanam-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  border-radius: 8px;
+  transition: background 0.25s ease;
+  width: 100%;
+  border-left: 3px solid transparent;
+}
+
+.score-avartanam-row.active-avartanam {
+  background: rgba(155, 44, 44, 0.05);
+  border-left-color: #D4AF37;
+}
+
+.score-anga-cells {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  min-width: 0;
+}
+
+.score-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(155, 44, 44, 0.2);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  position: relative;
+}
+
+.score-cell:hover {
+  background: rgba(155, 44, 44, 0.08);
+}
+
+.tala-stage-cue {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  background: rgba(192, 125, 30, 0.06);
+  border: 1px dashed var(--gold-hairline);
+  border-radius: var(--radius-full);
+  padding: 6px 18px;
+}
+
+.tala-cue-icon {
+  color: var(--gold-primary);
+  font-size: 0.75rem;
+}
+
+.score-cell.active-beat-cell {
+  background: rgba(155, 44, 44, 0.16);
+  border-color: #9B2C2C;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 0 10px rgba(155, 44, 44, 0.22);
+}
+
+.score-swara-text {
+  font-family: 'Cormorant Garamond', 'Cinzel', serif;
+  font-size: 1.68rem;
+  font-weight: 600;
+  color: #2C221D;
+  letter-spacing: 0.02em;
+  transition: all 0.2s ease;
+}
+
+.score-cell.karvai .score-swara-text,
+.score-cell.semicolon .score-swara-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.45rem;
+  color: #9B2C2C;
+  font-weight: 700;
+}
+
+.score-cell.rest .score-swara-text {
+  color: rgba(44, 34, 29, 0.3);
+  font-size: 1.2rem;
+}
+
+.score-cell.overline .score-swara-text {
+  text-decoration: overline;
+  text-decoration-thickness: 1.5px;
+  text-decoration-color: #9B2C2C;
+}
+
+.score-cell.double-overline .score-swara-text {
+  text-decoration: overline;
+  text-decoration-style: double;
+  text-decoration-thickness: 1.5px;
+  text-decoration-color: #9B2C2C;
+}
+
+@keyframes aksharaPulse {
+  0%   { box-shadow: 0 0 10px rgba(155, 44, 44, 0.3); }
+  50%  { box-shadow: 0 0 22px rgba(155, 44, 44, 0.6), 0 0 8px rgba(212, 175, 55, 0.4); }
+  100% { box-shadow: 0 0 10px rgba(155, 44, 44, 0.3); }
+}
+
+/* Active Akshara Radiant Beat Glow */
+.score-cell.active-akshara,
+.score-cell.active-score-beat {
+  background: rgba(155, 44, 44, 0.18);
+  border-color: #D4AF37;
+  border-width: 2px;
+  animation: aksharaPulse 0.8s ease-in-out;
+  transform: translateY(-3px) scale(1.04);
+  z-index: 2;
+}
+
+.score-cell.active-akshara .score-swara-text,
+.score-cell.active-score-beat .score-swara-text {
+  color: #D4AF37;
+  font-weight: 700;
+  text-shadow: 0 0 12px rgba(212, 175, 55, 0.5);
+}
+
+/* --- Luminous Golden Waveform with Pulse Beads --- */
+.classical-waveform-section {
+  width: 100%;
+  max-width: 880px;
+  margin: 16px auto 0 auto;
+}
+
+.luminous-waveform-wrapper {
+  width: 100%;
+  position: relative;
+  cursor: pointer;
+}
+
+.luminous-waveform-canvas {
+  width: 100%;
+  height: 90px;
+  display: block;
+}
+
+/* Floating Master Playback & Mode Controller (Manuscript Paper) */
+.classical-playback-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+  padding: 10px 18px;
+  background: rgba(245, 239, 230, 0.9);
+  border: 1px solid rgba(155, 44, 44, 0.2);
+  border-radius: var(--radius-full);
+  backdrop-filter: blur(12px);
+}
+
+.stage-play-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #9B2C2C 0%, #C07D1E 100%);
+  border: none;
+  color: #FFF;
+  font-size: 1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(155, 44, 44, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stage-play-btn:hover {
+  transform: scale(1.06);
+  box-shadow: 0 6px 20px rgba(155, 44, 44, 0.45);
+}
+
+.stage-timing {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  color: #5E5148;
+  letter-spacing: 0.05em;
+}
+
+.stage-tempo-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: #9B2C2C;
+  background: rgba(155, 44, 44, 0.08);
+  border: 1px solid rgba(155, 44, 44, 0.25);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+}
+
+.stage-mode-switcher {
+  display: flex;
+  background: rgba(45, 35, 30, 0.06);
+  border-radius: var(--radius-full);
+  padding: 2px;
+  gap: 3px;
+}
+
+.stage-mode-btn {
+  background: transparent;
+  border: none;
+  color: #5E5148;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 5px 14px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.stage-mode-btn:hover {
+  color: #2C221D;
+}
+
+.stage-mode-btn.active {
+  background: rgba(155, 44, 44, 0.14);
+  border: 1px solid rgba(155, 44, 44, 0.35);
+  color: #9B2C2C;
+}
+
+.stage-export-btn {
+  background: transparent;
+  border: 1px solid rgba(155, 44, 44, 0.3);
+  color: #9B2C2C;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 5px 14px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.stage-export-btn:hover {
+  background: rgba(155, 44, 44, 0.1);
+  color: #7A2828;
+}
+
+/* Responsive tuning */
+@media (max-width: 768px) {
+  .classical-obsidian-stage {
+    padding: 28px 16px;
+  }
+  .classical-stage-title {
+    font-size: 1.7rem;
+  }
+  .score-swara-text {
+    font-size: 1.25rem;
+  }
+  .score-cell {
+    padding: 4px 6px;
+  }
+}
+
+
+/* ── 2. "Your Sa" Calibration Controls (EZSwara Style) ── */
+.sa-calibration-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-lg);
+  padding: 10px 18px;
+  margin: 0 auto 16px;
+  max-width: 960px;
+  flex-wrap: wrap;
+  transition: all var(--transition-normal);
+}
+
+.sa-calib-label-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sa-calib-icon {
+  font-size: 1.2rem;
+}
+
+.sa-calib-title {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 0.5px;
+}
+
+.sa-calib-sub {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+}
+
+.sa-calib-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sa-btn-auto {
+  background: var(--gold-dim);
+  border: 1px solid var(--gold-border);
+  color: var(--gold-primary);
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.sa-btn-auto:hover,
+.sa-btn-auto.active {
+  background: var(--gold-primary);
+  color: #FFF;
+  border-color: var(--gold-primary);
+}
+
+.sa-select-group {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  padding: 2px 6px;
+  gap: 4px;
+}
+
+.sa-select {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 4px 6px;
+  cursor: pointer;
+  outline: none;
+}
+
+.sa-select option {
+  background: var(--bg-surface-elevated);
+  color: var(--text-primary);
+}
+
+.sa-hz-pill {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--gold-primary);
+  background: var(--gold-dim);
+  border: 1px solid var(--gold-hairline);
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+/* ── 3. Live Accumulating Swara Run (EZSwara Style) ── */
+.live-accumulating-run {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  text-align: left;
+}
+
+.live-run-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  margin-bottom: 6px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.live-run-counter {
+  color: var(--gold-primary);
+  font-weight: 600;
+}
+
+.live-run-tokens {
+  min-height: 38px;
+  max-height: 72px;
+  overflow-y: auto;
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.live-run-token {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 2px 6px;
+  background: var(--gold-dim);
+  color: var(--gold-primary);
+  border-radius: var(--radius-xs);
+  font-weight: 600;
+  animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes popIn {
+  from { transform: scale(0.7); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* ── 4. Floating Tanpura Drone Widget (EZSwara Style) ── */
+.tanpura-widget {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 1000;
+  font-family: var(--font-sans);
+}
+
+.tanpura-fab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: var(--gold-primary);
+  color: #FFF;
+  border: 2px solid var(--gold-light);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.4), var(--gold-glow);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.tanpura-fab:hover {
+  transform: translateY(-2px) scale(1.05);
+}
+
+.tanpura-fab.playing::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid var(--gold-primary);
+  opacity: 0.6;
+  animation: tanpuraRipple 1.8s ease-out infinite;
+}
+
+@keyframes tanpuraRipple {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+.tanpura-popover {
+  position: absolute;
+  right: 0;
+  bottom: 68px;
+  width: 326px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55), 0 0 20px rgba(212, 163, 89, 0.12);
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  animation: fadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1001;
+}
+
+.tanpura-popover.open {
+  display: flex;
+}
+
+.tanpura-pop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-hairline);
+  padding-bottom: 8px;
+}
+
+.tanpura-pop-title {
+  font-family: var(--font-serif);
+  font-size: 1.10rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+/* Live Pitch & Kattai Status Pill */
+.tanpura-pitch-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(212, 163, 89, 0.08);
+  border: 1px solid rgba(212, 163, 89, 0.25);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+}
+
+.tanpura-pitch-main {
+  display: flex;
+  align-items: center;
+  font-size: 0.88rem;
+}
+
+.tanpura-hz-val {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--gold-primary);
+  background: var(--bg-surface);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(212, 163, 89, 0.3);
+}
+
+/* 4-String Rhythmic Activity Meter */
+.tanpura-strings-meter {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.tanpura-str-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-sm);
+  padding: 5px 2px;
+  transition: all 0.15s ease-out;
+}
+
+.tanpura-str-pill .str-num {
+  font-size: 0.65rem;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+}
+
+.tanpura-str-pill .str-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.tanpura-str-pill.plucking {
+  background: rgba(212, 163, 89, 0.28);
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 14px rgba(212, 163, 89, 0.45);
+  transform: translateY(-2px) scale(1.04);
+}
+
+.tanpura-str-pill.plucking .str-label {
+  color: var(--gold-primary);
+}
+
+/* Section Layouts */
+.tanpura-pop-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tanpura-pop-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.tanpura-scale-row {
+  display: flex;
+  gap: 6px;
+}
+
+.tanpura-scale-select {
+  flex: 1;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  padding: 5px 8px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.tanpura-scale-select:focus {
+  border-color: var(--gold-primary);
+}
+
+.tanpura-octave-toggle {
+  display: inline-flex;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  padding: 2px;
+}
+
+.tanpura-oct-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.tanpura-oct-btn.active {
+  background: var(--gold-primary);
+  color: #FFF;
+}
+
+.tanpura-options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.tanpura-chip-row {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-surface);
+  padding: 2px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-hairline);
+}
+
+.tanpura-tuning-chips {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-surface);
+  padding: 2px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-hairline);
+}
+
+.tanpura-chip {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: center;
+  transition: all var(--transition-fast);
+}
+
+.tanpura-chip:hover {
+  color: var(--text-primary);
+}
+
+.tanpura-chip.active {
+  background: var(--gold-primary);
+  color: #FFF;
+}
+
+.tanpura-vol-slider {
+  width: 100%;
+  accent-color: var(--gold-primary);
+  cursor: pointer;
+}
+
+.tanpura-start-btn {
+  transition: all var(--transition-fast);
+}
+
+.tanpura-fab.playing {
+  background: var(--gold-primary);
+}
+
+/* ── 5. Carnatic Manuscript Export Modal ── */
+.export-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(44, 34, 29, 0.65);
+  backdrop-filter: blur(6px);
+  z-index: 2000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.export-modal-backdrop.open {
+  display: flex;
+}
+
+.export-modal {
+  width: 100%;
+  max-width: 680px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-xl);
+  padding: 28px;
+  box-shadow: 0 20px 60px rgba(45, 35, 30, 0.22);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.export-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.export-modal-title {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  color: var(--text-primary);
+}
+
+.export-text-preview {
+  width: 100%;
+  height: 220px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+  white-space: pre;
+  overflow: auto;
+  resize: none;
+}
+
+.export-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--border-hairline);
+  color: var(--text-secondary);
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+}
+
+.btn-primary {
+  background: var(--gold-primary);
+  color: #FFF;
+  border: none;
+  padding: 8px 18px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+/* ── Mobile & Tablet Refinements ── */
+@media (max-width: 640px) {
+  .top-tala-beads {
+    overflow-x: auto;
+    padding-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .tala-beads-row {
+    gap: 4px;
+  }
+  .tala-bead {
+    width: 42px;
+    height: 44px;
+    padding: 3px;
+  }
+  .bead-num {
+    font-size: 0.84rem;
+  }
+  .bead-kriya {
+    font-size: 0.56rem;
+  }
+  .tala-anga-divider {
+    font-size: 1.15rem;
+    margin-top: 8px;
+  }
+  .sa-calibration-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .sa-calib-controls {
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+}
+
+

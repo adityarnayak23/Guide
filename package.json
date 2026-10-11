@@ -1,0 +1,19 @@
+{
+  "name": "guide",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^8.3.0"
+  },
+  "dependencies": {
+    "@spotify/basic-pitch": "^1.0.1",
+    "gsap": "^3.15.0",
+    "wavesurfer.js": "^8.0.1"
+  }
+}
