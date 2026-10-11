@@ -496,15 +496,16 @@ export function detectBeatStructure(notes, audioDuration, audioEstimatedBpm = nu
     testBpms.push(audioEstimatedBpm);
   }
 
+  const firstOnset = noteStarts[0] || 0;
   for (const testBpm of testBpms) {
     const akshara = 60 / testBpm;
     let totalPhaseErr = 0;
     for (const t of noteStarts) {
-      const phase = (t / akshara) % 1.0;
-      const err = Math.min(phase, 1.0 - phase);
+      const phase = ((t - firstOnset) / akshara) % 1.0;
+      const err = Math.min(Math.abs(phase), 1.0 - Math.abs(phase));
       totalPhaseErr += err;
     }
-    const meanErr = totalPhaseErr / noteStarts.length;
+    const meanErr = totalPhaseErr / (noteStarts.length || 1);
 
     // Slight bonus if it matches acoustic audio onset BPM or octave harmonic
     let acousticBonus = 0;
@@ -556,12 +557,10 @@ export function detectBeatStructure(notes, audioDuration, audioEstimatedBpm = nu
  * Maps sung notes into authentic Avartanams for any of the 8 major Carnatic Talas.
  * 
  * Quality Guarantees:
- * 1. Onset-primary assignment: notes belong to the beat where they strike,
- *    eliminating false 2nd-speed (dvitiya) overlines caused by subtle boundary spillover.
- * 2. True 2nd speed overlines: only applied when 2 genuine onsets occur within 1 beat.
- * 3. Authentic Karvai (hold): commas (,) only indicate actual sustained notes from previous beats.
- * 4. Vishranti (silence): empty beats are marked as subtle rests (·), NOT as commas or semicolons.
- * 5. Avartanam pruning: avoids generating empty phantom rows beyond the song's ending.
+ * 1. Anchored Eduppu (Samam): aligns Beat 1 to the first note onset, eliminating false start rests.
+ * 2. Beat-slot nearest-neighbor quantization: cleanly separates swaras into 1st, 2nd, and 3rd speed.
+ * 3. Guaranteed 4-line presentation: always maintains at least 4 full avartanams (lines) in the stage.
+ * 4. Authentic Karvai & Vishranti: distinguishes sustained extensions (,) from quiet breath rests (·).
  */
 export function buildTalaGrid(notes, audioDuration, customAksharaSec = null, raga = null, talaId = 'adi') {
   const talaDef = CARNATIC_TALAS[talaId] || CARNATIC_TALAS.adi;
@@ -572,6 +571,49 @@ export function buildTalaGrid(notes, audioDuration, customAksharaSec = null, rag
   const aksharaSec = customAksharaSec || autoAkshara || 0.54;
 
   if (!notes || notes.length === 0) {
+    // Generate 4 clean lines of rests for initial/empty state
+    const emptyAvartanams = [];
+    for (let aIdx = 0; aIdx < 4; aIdx++) {
+      const cells = [];
+      for (let beat = 1; beat <= totalBeats; beat++) {
+        const aksharaNumber = aIdx * totalBeats + beat;
+        let cumulative = 0;
+        let currentAnga = talaDef.angas[0];
+        let divider = '';
+        for (let i = 0; i < talaDef.angas.length; i++) {
+          cumulative += talaDef.angas[i].count;
+          if (beat <= cumulative) {
+            currentAnga = talaDef.angas[i];
+            if (beat === cumulative) {
+              divider = (i === talaDef.angas.length - 1) ? '||' : '|';
+            }
+            break;
+          }
+        }
+        const kriya = talaDef.beats[beat - 1] || talaDef.beats[0];
+        cells.push({
+          aksharaNumber,
+          beat,
+          anga: currentAnga.label,
+          divider,
+          display: '·',
+          type: 'rest',
+          isOverline: false,
+          isDoubleOverline: false,
+          startTime: Number(((aksharaNumber - 1) * aksharaSec).toFixed(2)),
+          endTime: Number((aksharaNumber * aksharaSec).toFixed(2)),
+          kriya,
+          note: null,
+        });
+      }
+      emptyAvartanams.push({
+        avartanamIndex: aIdx + 1,
+        startTime: cells[0].startTime,
+        endTime: cells[totalBeats - 1].endTime,
+        cells,
+      });
+    }
+
     return {
       talaId: talaDef.id,
       talaName: talaDef.name,
@@ -581,19 +623,54 @@ export function buildTalaGrid(notes, audioDuration, customAksharaSec = null, rag
       totalBeats,
       angas: talaDef.angas,
       aksharaSec,
+      eduppuSec: 0,
       bpm: Math.round(60 / aksharaSec),
-      avartanams: [],
+      avartanams: emptyAvartanams,
     };
   }
 
-  // Determine musical boundary (do not create trailing avartanams past the music)
-  const lastNote = notes[notes.length - 1];
-  const lastNoteEndTime = lastNote ? lastNote.endTime : audioDuration;
-  const totalAksharasNeeded = Math.max(totalBeats, Math.round(lastNoteEndTime / aksharaSec));
-  const numAvartanams = Math.ceil(totalAksharasNeeded / totalBeats);
+  // 1. Calculate Musical Eduppu (Downbeat Anchor Offset)
+  // Aligns Beat 1 directly to the first sung note onset with micro-phase optimization
+  const firstT = notes[0].startTime;
+  let bestT0 = firstT;
+  let minPhaseErr = Infinity;
+
+  for (let dt = -0.25 * aksharaSec; dt <= 0.15 * aksharaSec; dt += 0.015) {
+    const tCand = Math.max(0, firstT + dt);
+    let sumErr = 0;
+    for (const n of notes) {
+      const phase = ((n.startTime - tCand) / aksharaSec) % 1.0;
+      const err = Math.min(Math.abs(phase), 1.0 - Math.abs(phase));
+      sumErr += err;
+    }
+    if (sumErr < minPhaseErr) {
+      minPhaseErr = sumErr;
+      bestT0 = tCand;
+    }
+  }
+  const eduppuSec = Number(bestT0.toFixed(2));
+
+  // 2. Map notes into beat slots relative to eduppuSec
+  // Filter out tiny micro-transients (< 0.08s) that create spurious split notes
+  const notesByAkshara = {};
+  for (const n of notes) {
+    if (n.duration && n.duration < 0.08 && n.confidence && n.confidence < 0.35) continue;
+    const relBeats = (n.startTime - eduppuSec) / aksharaSec;
+    const slot = Math.max(1, Math.round(relBeats) + 1);
+    if (!notesByAkshara[slot]) notesByAkshara[slot] = [];
+    notesByAkshara[slot].push(n);
+  }
+
+  // 3. Determine number of Avartanams (Always at least 4 lines in a go)
+  let maxAksharaWithNote = 1;
+  for (const slotStr of Object.keys(notesByAkshara)) {
+    const s = parseInt(slotStr, 10);
+    if (s > maxAksharaWithNote) maxAksharaWithNote = s;
+  }
+  const neededAvartanams = Math.ceil(maxAksharaWithNote / totalBeats);
+  const numAvartanams = Math.max(4, neededAvartanams);
 
   const avartanams = [];
-  let noteCursor = 0;
 
   for (let aIdx = 0; aIdx < numAvartanams; aIdx++) {
     const startAkshara = aIdx * totalBeats;
@@ -601,21 +678,10 @@ export function buildTalaGrid(notes, audioDuration, customAksharaSec = null, rag
 
     for (let beat = 1; beat <= totalBeats; beat++) {
       const aksharaNumber = startAkshara + beat;
-      const beatStartTime = (aksharaNumber - 1) * aksharaSec;
-      const beatEndTime = aksharaNumber * aksharaSec;
-      const onsetTolerance = aksharaSec * 0.22; // 22% tolerance for singer rhythm variability
+      const beatStartTime = Number((eduppuSec + (aksharaNumber - 1) * aksharaSec).toFixed(2));
+      const beatEndTime = Number((eduppuSec + aksharaNumber * aksharaSec).toFixed(2));
 
-      // Collect note onsets belonging to this beat
-      const onsetsInBeat = [];
-      while (noteCursor < notes.length) {
-        const n = notes[noteCursor];
-        if (n.startTime < beatEndTime - onsetTolerance) {
-          onsetsInBeat.push(n);
-          noteCursor++;
-        } else {
-          break;
-        }
-      }
+      const notesInBeat = notesByAkshara[aksharaNumber] || [];
 
       let cellDisplay = '·';
       let cellType = 'rest';
@@ -623,34 +689,35 @@ export function buildTalaGrid(notes, audioDuration, customAksharaSec = null, rag
       let isDoubleOverline = false;
       let activeNote = null;
 
-      if (onsetsInBeat.length === 1) {
+      if (notesInBeat.length === 1) {
         // Prathama Kaalam (1st speed): 1 note in 1 akshara
-        const n = onsetsInBeat[0];
+        const n = notesInBeat[0];
         cellDisplay = formatCarnaticSwara(n, raga).symbol;
         cellType = 'swara';
         activeNote = n;
-      } else if (onsetsInBeat.length >= 4) {
-        // Tritiya Kaalam (3rd speed): 4 notes in 1 akshara with double overline
-        cellDisplay = onsetsInBeat.map(n => formatCarnaticSwara(n, raga).symbol).join(' ');
+      } else if (notesInBeat.length >= 3) {
+        // Tritiya Kaalam (3rd speed): 3-4 notes in 1 akshara with double overline
+        cellDisplay = notesInBeat.map(n => formatCarnaticSwara(n, raga).symbol).join(' ');
         cellType = 'tritiya';
         isOverline = true;
         isDoubleOverline = true;
-        activeNote = onsetsInBeat[0];
-      } else if (onsetsInBeat.length >= 2) {
+        activeNote = notesInBeat[0];
+      } else if (notesInBeat.length === 2) {
         // Dvitiya Kaalam (2nd speed): 2 notes in 1 akshara with overline
-        cellDisplay = onsetsInBeat.map(n => formatCarnaticSwara(n, raga).symbol).join(' ');
+        cellDisplay = notesInBeat.map(n => formatCarnaticSwara(n, raga).symbol).join(' ');
         cellType = 'dvitiya';
         isOverline = true;
         isDoubleOverline = false;
-        activeNote = onsetsInBeat[0];
+        activeNote = notesInBeat[0];
       } else {
-        // No new onset: check if previous note is sustained across into this beat
-        const prevNote = noteCursor > 0 ? notes[noteCursor - 1] : null;
-        if (prevNote && prevNote.endTime > beatStartTime + (aksharaSec * 0.35)) {
+        // No new onset: check if previous note was held across into this beat
+        const priorNotes = notes.filter(n => n.startTime < beatStartTime);
+        const lastSung = priorNotes[priorNotes.length - 1];
+        if (lastSung && lastSung.endTime > beatStartTime + (aksharaSec * 0.32)) {
           // Sustained note extension (Karvai = 1 akshara hold)
           cellDisplay = ',';
           cellType = 'karvai';
-          activeNote = prevNote;
+          activeNote = lastSung;
         } else {
           // Silence / breath pause / rest (Vishranti)
           cellDisplay = '·';
@@ -685,8 +752,8 @@ export function buildTalaGrid(notes, audioDuration, customAksharaSec = null, rag
         type: cellType,
         isOverline,
         isDoubleOverline,
-        startTime: Number(beatStartTime.toFixed(2)),
-        endTime: Number(beatEndTime.toFixed(2)),
+        startTime: beatStartTime,
+        endTime: beatEndTime,
         kriya,
         note: activeNote,
       });
@@ -700,10 +767,10 @@ export function buildTalaGrid(notes, audioDuration, customAksharaSec = null, rag
     });
   }
 
-  // Prune any empty trailing avartanams that contain only rests (no swaras or karvais)
-  while (avartanams.length > 1) {
+  // Only prune if beyond 4 lines and all trailing avartanams past line 4 are empty rests
+  while (avartanams.length > 4) {
     const lastAv = avartanams[avartanams.length - 1];
-    const hasMusicalContent = lastAv.cells.some(c => c.type === 'swara' || c.type === 'dvitiya' || c.type === 'tritiya' || c.type === 'karvai');
+    const hasMusicalContent = lastAv.cells.some(c => c.type === 'swara' || c.type === 'dvitiya' || c.type === 'tritiya');
     if (!hasMusicalContent) {
       avartanams.pop();
     } else {
@@ -720,6 +787,7 @@ export function buildTalaGrid(notes, audioDuration, customAksharaSec = null, rag
     totalBeats,
     angas: talaDef.angas,
     aksharaSec,
+    eduppuSec,
     bpm: Math.round(60 / aksharaSec),
     avartanams,
   };

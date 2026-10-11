@@ -1398,7 +1398,6 @@ async function handleFile(file) {
     const acoustic = detectAudioBpm(state.audioBuffer);
     if (acoustic && acoustic.bpm) {
       applyDetectedBpm(acoustic.bpm, acoustic.kala, 'Acoustic Onset Analysis');
-      showToast(`✦ Probable Tempo Identified: ${acoustic.bpm} BPM (${acoustic.kala}) · Tala speed adjusted!`);
     }
     audioCtx.close();
   } catch (err) {
@@ -1968,12 +1967,9 @@ function renderCarnaticStudio() {
   const finalBpm = state.talaData.bpm || state.beatAnalysis.estimatedBpm;
   applyDetectedBpm(finalBpm, state.beatAnalysis.kala, 'Refined Swara Beat Quantization');
 
-  // Auto-detect beat structure vs free-flow per user requirement
-  if (state.beatAnalysis.hasBeatStructure) {
-    state.carnaticMode = 'tala';
-  } else {
-    state.carnaticMode = 'freeflow';
-  }
+  // Strictly lock transcription to authentic Tala Beat Structure
+  state.carnaticMode = 'tala';
+  state.scoreLineWindow = 0;
 
   // Update Master Masthead Header
   const titleEl = document.getElementById('classical-stage-title');
@@ -1981,9 +1977,7 @@ function renderCarnaticStudio() {
   const talaDef = CARNATIC_TALAS[state.activeTalaId] || CARNATIC_TALAS.adi;
 
   if (titleEl) {
-    titleEl.textContent = state.carnaticMode === 'tala' 
-      ? `${talaDef.name} — ${talaDef.nadai}` 
-      : 'Alapana & Virutham — Free Flow';
+    titleEl.textContent = `${talaDef.name} — ${talaDef.nadai}`;
   }
 
   if (subtitleEl) {
@@ -2303,11 +2297,15 @@ function updateActiveAksharaAtTime(time) {
   if (!currentTalaData) return;
   const aksharaSec = currentTalaData.aksharaSec || 0.53;
   const totalBeats = currentTalaData.totalBeats || 8;
-  const currentAksharaNum = Math.floor(time / aksharaSec) + 1;
+  const eduppuSec = currentTalaData.eduppuSec || 0;
+
+  // Real-time beat index relative to the musical start anchor (Eduppu)
+  const elapsed = Math.max(0, time - eduppuSec);
+  const currentAksharaNum = Math.floor(elapsed / aksharaSec) + 1;
   const currentAvartanamIdx = Math.floor((currentAksharaNum - 1) / totalBeats);
 
   // Auto-page 4-line window if current line moves beyond visible 4 lines!
-  const totalAvartanams = currentTalaData.avartanams ? currentTalaData.avartanams.length : 1;
+  const totalAvartanams = currentTalaData.avartanams ? currentTalaData.avartanams.length : 4;
   const targetWindow = Math.floor(currentAvartanamIdx / 4);
   const maxWindow = Math.max(0, Math.ceil(totalAvartanams / 4) - 1);
   const boundedTarget = Math.min(maxWindow, Math.max(0, targetWindow));
@@ -2315,6 +2313,12 @@ function updateActiveAksharaAtTime(time) {
   if (boundedTarget !== state.scoreLineWindow && currentAvartanamIdx < totalAvartanams) {
     state.scoreLineWindow = boundedTarget;
     renderTalaScoreBoard();
+  }
+
+  // Keep Master Tala Hand visually locked to current beat kriya
+  if (state.handStage) {
+    const currentBeatInAvartanam = ((currentAksharaNum - 1) % totalBeats) + 1;
+    state.handStage.setBeat(currentBeatInAvartanam);
   }
 
   // Highlight active line
