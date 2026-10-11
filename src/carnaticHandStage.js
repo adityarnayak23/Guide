@@ -27,7 +27,7 @@ export class CarnaticHandStage {
 
     this.options = {
       isTopStage: false,
-      soundEnabled: options.soundEnabled !== undefined ? options.soundEnabled : true,
+      soundEnabled: false, // Default to SILENT (visual-only mudras, never interfere with vocal audio)
       bpm: options.bpm || 76,
       onBeatChange: options.onBeatChange || null,
       ...options,
@@ -269,6 +269,7 @@ export class CarnaticHandStage {
    */
   setBeat(beat, animated = true) {
     if (beat < 1 || beat > this.totalBeats) beat = 1;
+    if (beat === this.currentBeat && animated) return; // Strict guard: never re-trigger sounds or animations on same beat
     this.currentBeat = beat;
     const beatInfo = this.beats[beat - 1] || this.beats[0];
     const kriya = beatInfo.kriya;

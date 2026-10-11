@@ -912,7 +912,7 @@ function initTopTalaStage() {
 
   state.topHandStage = new CarnaticHandStage('top-tala-hand-stage', {
     isTopStage: true,
-    soundEnabled: true,
+    soundEnabled: false, // Purely visual hand mudras, no audio clicks
     bpm: 76,
     onBeatChange: (beat, beatInfo) => {
       // Update top beads
@@ -1999,6 +1999,7 @@ function renderCarnaticStudio() {
   }
   state.handStage = new CarnaticHandStage('classical-hand-canvas-wrap', {
     talaId: state.activeTalaId,
+    soundEnabled: false, // Purely visual hand mudras accompanying vocal music
   });
 
   // Sync Tala select dropdown & auto badge
@@ -2315,10 +2316,12 @@ function updateActiveAksharaAtTime(time) {
     renderTalaScoreBoard();
   }
 
-  // Keep Master Tala Hand visually locked to current beat kriya
+  // Keep Master Tala Hand visually locked to current beat kriya (only on beat change)
   if (state.handStage) {
     const currentBeatInAvartanam = ((currentAksharaNum - 1) % totalBeats) + 1;
-    state.handStage.setBeat(currentBeatInAvartanam);
+    if (state.handStage.currentBeat !== currentBeatInAvartanam) {
+      state.handStage.setBeat(currentBeatInAvartanam, true);
+    }
   }
 
   // Highlight active line
@@ -2370,6 +2373,7 @@ function initClassicalStageReady() {
   state.handStage = new CarnaticHandStage('classical-hand-canvas-wrap', {
     bpm: 88,
     talaId: state.activeTalaId,
+    soundEnabled: false, // Purely visual hand mudras, no audio clicks
     onBeatChange: (beat) => {
       // Highlight ready cell across Line 1 if playing autonomous loop before audio load
       if (!state.wavesurfer) {
