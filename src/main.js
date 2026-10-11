@@ -68,11 +68,13 @@ const state = {
   beatAnalysis: null,
   raga: null,
   carnaticMode: 'tala', // 'tala' or 'freeflow'
+  scoreLineWindow: 0, // 0-based page index for 4-line stage
   detectedBpm: 76,
   detectedKala: 'Madhyama Kala',
   activeTempoMode: 'auto', // 'auto', '56', '76', '108'
   rafLoopId: null, // requestAnimationFrame handle for 60FPS playback sync
 };
+
 
 // ── DOM Layout ──────────────────────────────────────────────────────────────
 function createApp() {
@@ -291,10 +293,21 @@ function createApp() {
         <!-- Master Classical Hand Illustration Rig (with Gold Bangles & Kinetic Motion Arcs) -->
         <div class="classical-hand-canvas-wrap" id="classical-hand-canvas-wrap"></div>
 
-        <!-- Golden Architectural Tala Score Grid -->
+        <!-- Golden Architectural Tala Score Grid (4-Line Synchronized Stage) -->
         <div class="classical-score-board" id="classical-score-board">
+          <!-- 4-Line Stage Window Controls -->
+          <div class="score-window-nav" id="score-window-nav" style="display: none;">
+            <button class="score-nav-btn" id="score-prev-page" title="Previous 4 Lines" type="button">◀ Prev 4 Lines</button>
+            <div class="score-window-indicator">
+              <span class="score-window-text" id="score-window-text">Lines 1–4</span>
+              <span class="score-sync-badge" id="score-sync-badge">✦ Auto-Paging in Sync</span>
+            </div>
+            <button class="score-nav-btn" id="score-next-page" title="Next 4 Lines" type="button">Next 4 Lines ▶</button>
+          </div>
+
           <!-- Laghu (4) | Dhrutam (2) | Dhrutam (2) Anga Header -->
           <div class="score-anga-header">
+            <div class="score-row-tag-spacer"></div>
             <div class="score-anga-col laghu-header">Laghu (4)</div>
             <div class="score-col-divider">|</div>
             <div class="score-anga-col dhrutam-header">Dhrutam (2)</div>
@@ -303,7 +316,7 @@ function createApp() {
           </div>
           <!-- Golden Separator Horizontal Bar -->
           <div class="score-gold-divider-line"></div>
-          <!-- Swaras Rows Container (Avartanams) -->
+          <!-- Swaras Rows Container (Exactly 4 Lines in a go) -->
           <div class="score-avartanams-list" id="score-avartanams-list"></div>
         </div>
 
@@ -652,6 +665,30 @@ function bindEvents() {
 
   const btnStageFreeflow = document.getElementById('btn-stage-freeflow');
   if (btnStageFreeflow) btnStageFreeflow.addEventListener('click', () => setCarnaticMode('freeflow'));
+
+  // 4-Line Stage Pagination Controls
+  const btnPrevLines = document.getElementById('score-prev-page');
+  if (btnPrevLines) {
+    btnPrevLines.addEventListener('click', () => {
+      if (state.scoreLineWindow > 0) {
+        state.scoreLineWindow--;
+        renderTalaScoreBoard();
+      }
+    });
+  }
+  const btnNextLines = document.getElementById('score-next-page');
+  if (btnNextLines) {
+    btnNextLines.addEventListener('click', () => {
+      const currentData = state.talaData || state.adiTalaData;
+      const total = currentData?.avartanams?.length || 0;
+      const maxWindow = Math.max(0, Math.ceil(total / 4) - 1);
+      if (state.scoreLineWindow < maxWindow) {
+        state.scoreLineWindow++;
+        renderTalaScoreBoard();
+      }
+    });
+  }
+
 
   // Stage Tala Selector
   const stageTalaSelect = document.getElementById('stage-tala-select');
@@ -1435,8 +1472,10 @@ async function renderResults() {
   const tonicBanner = document.getElementById('tonic-banner');
   if (tonicBanner) tonicBanner.classList.add('visible');
 
-  // 1. Render Carnatic Kriti Notation & Tala Studio (Identifies Raga, Tala, & Classical Hand Rig)
+  // 1. Reset 4-line window to top and render Carnatic Kriti Notation & Tala Studio
+  state.scoreLineWindow = 0;
   renderCarnaticStudio();
+
 
   // 2. Populate Tonic & Vocal Stats with Carnatic musicology
   document.getElementById('tonic-freq').textContent = `Sa = ${state.tonic.tonicFreq} Hz`;
@@ -1603,8 +1642,8 @@ async function renderWaveform() {
     if (state.handStage) state.handStage.animateToKriya(1, false);
     if (state.topHandStage) state.topHandStage.setBeat(1, false);
     // Clear all active highlights
-    document.querySelectorAll('.score-cell.active-akshara, .score-cell.active-score-beat').forEach(el => {
-      el.classList.remove('active-akshara', 'active-score-beat');
+    document.querySelectorAll('.score-cell.active-akshara, .score-cell.active-score-beat, .score-cell.active-sung-note').forEach(el => {
+      el.classList.remove('active-akshara', 'active-score-beat', 'active-sung-note');
     });
     document.querySelectorAll('.horizontal-swara-block.active-sung-note').forEach(el => el.classList.remove('active-sung-note'));
     document.querySelectorAll('.sub-ribbon-item.active').forEach(el => el.classList.remove('active'));
@@ -1612,6 +1651,7 @@ async function renderWaveform() {
     state.activeNoteIndex = -1;
   });
 }
+
 
 // ── 60 FPS Playback Sync Engine ──────────────────────────────────────────────
 function startPlaybackSyncLoop() {
@@ -2077,21 +2117,56 @@ function renderTalaScoreBoard() {
   // Update Anga Header
   const angaHeader = document.querySelector('.score-anga-header');
   if (angaHeader) {
-    angaHeader.innerHTML = tala.angas.map((anga, aIdx) => {
-      const divider = (aIdx < tala.angas.length - 1) ? '<div class="score-col-divider">|</div>' : '';
-      return `<div class="score-anga-col" style="flex: ${anga.count};">${anga.label}</div>${divider}`;
-    }).join('');
+    angaHeader.innerHTML = `
+      <div class="score-row-tag-spacer"></div>
+      ${tala.angas.map((anga, aIdx) => {
+        const divider = (aIdx < tala.angas.length - 1) ? '<div class="score-col-divider">|</div>' : '';
+        return `<div class="score-anga-col" style="flex: ${anga.count};">${anga.label}</div>${divider}`;
+      }).join('')}
+    `;
+  }
+
+  const avartanams = currentData.avartanams || [];
+  const totalAvartanams = avartanams.length;
+  const linesPerPage = 4;
+  const maxWindow = Math.max(0, Math.ceil(totalAvartanams / linesPerPage) - 1);
+  if (state.scoreLineWindow > maxWindow) state.scoreLineWindow = maxWindow;
+  if (state.scoreLineWindow < 0) state.scoreLineWindow = 0;
+
+  const startIdx = state.scoreLineWindow * linesPerPage;
+  const endIdx = Math.min(totalAvartanams, startIdx + linesPerPage);
+
+  // Update Window Navigation label & button states
+  const winText = document.getElementById('score-window-text');
+  const prevBtn = document.getElementById('score-prev-page');
+  const nextBtn = document.getElementById('score-next-page');
+  const navWrap = document.getElementById('score-window-nav');
+  
+  if (totalAvartanams > 0) {
+    if (navWrap) navWrap.style.display = totalAvartanams > 4 ? 'flex' : 'none';
+    if (winText) winText.textContent = `Lines ${startIdx + 1}–${endIdx} of ${totalAvartanams}`;
+    if (prevBtn) prevBtn.disabled = (state.scoreLineWindow <= 0);
+    if (nextBtn) nextBtn.disabled = (state.scoreLineWindow >= maxWindow);
+  } else if (navWrap) {
+    navWrap.style.display = 'none';
   }
 
   container.innerHTML = '';
 
-  currentData.avartanams.forEach((av, avIdx) => {
+  for (let avIdx = startIdx; avIdx < endIdx; avIdx++) {
+    const av = avartanams[avIdx];
     const row = document.createElement('div');
     row.className = 'score-avartanam-row';
     row.id = `score-avartanam-${avIdx}`;
 
+    // Line number badge
+    const tag = document.createElement('div');
+    tag.className = 'score-row-tag';
+    tag.textContent = `Line ${avIdx + 1}`;
+    row.appendChild(tag);
+
     let cellOffset = 0;
-    row.innerHTML = tala.angas.map((anga, aIdx) => {
+    const angasHtml = tala.angas.map((anga, aIdx) => {
       const angaCells = av.cells.slice(cellOffset, cellOffset + anga.count);
       cellOffset += anga.count;
       const divider = (aIdx < tala.angas.length - 1) ? '<div class="score-col-divider">|</div>' : '';
@@ -2102,6 +2177,11 @@ function renderTalaScoreBoard() {
         ${divider}
       `;
     }).join('');
+
+    const rowContent = document.createElement('div');
+    rowContent.className = 'score-row-content';
+    rowContent.innerHTML = angasHtml;
+    row.appendChild(rowContent);
 
     // Click handler for cells to seek audio
     row.querySelectorAll('.score-cell').forEach(cellEl => {
@@ -2121,7 +2201,7 @@ function renderTalaScoreBoard() {
     });
 
     container.appendChild(row);
-  });
+  }
 }
 
 function renderScoreCellHtml(cell) {
@@ -2131,11 +2211,17 @@ function renderScoreCellHtml(cell) {
   if (cell.isDoubleOverline) swaraClass += ' double-overline';
   else if (cell.isOverline) swaraClass += ' overline';
 
-  const kriyaShort = cell.kriya ? cell.kriya.label : '';
+  const kriyaShort = cell.kriya ? (cell.kriya.name || cell.kriya.label || '') : '';
+  const kriyaSymbol = cell.kriya ? (cell.kriya.symbol || '') : '';
 
   return `
     <div class="score-cell${swaraClass}" id="score-cell-${cell.aksharaNumber}" data-akshara="${cell.aksharaNumber}" data-beat="${cell.beat}" data-start="${cell.startTime}" data-end="${cell.endTime}" title="Akshara ${cell.aksharaNumber} (Beat ${cell.beat}) · ${kriyaShort}\n${cell.display} · Time: ${cell.startTime}s - ${cell.endTime}s\nClick to seek audio">
+      <div class="score-cell-top-meta">
+        <span class="score-beat-indicator">B${cell.beat}</span>
+        ${kriyaSymbol ? `<span class="score-kriya-symbol">${kriyaSymbol}</span>` : ''}
+      </div>
       <span class="score-swara-text">${cell.display}</span>
+      ${kriyaShort ? `<span class="score-kriya-badge">${kriyaShort.split(' ')[0]}</span>` : ''}
     </div>
   `;
 }
@@ -2151,14 +2237,20 @@ function renderFreeFlowPhrases() {
     return;
   }
 
-  state.freeFlowData.forEach((phrase, pIdx) => {
+  // Windowing 4 phrases at a time for unmetered flow as well
+  const totalPhrases = state.freeFlowData.length;
+  const startIdx = state.scoreLineWindow * 4;
+  const endIdx = Math.min(totalPhrases, startIdx + 4);
+
+  for (let pIdx = startIdx; pIdx < endIdx; pIdx++) {
+    const phrase = state.freeFlowData[pIdx];
     const card = document.createElement('div');
     card.className = 'freeflow-phrase-card';
     card.id = `freeflow-phrase-${pIdx}`;
 
     card.innerHTML = `
       <div class="phrase-header">
-        <span class="phrase-index">Phrase ${phrase.phraseNumber} (Prayoga)</span>
+        <span class="phrase-index">Line ${pIdx + 1} · Phrase ${phrase.phraseNumber} (Prayoga)</span>
         <span>${phrase.startTime.toFixed(2)}s – ${phrase.endTime.toFixed(2)}s (${phrase.duration}s)</span>
       </div>
       <div class="phrase-sargam-box">${phrase.sargamText}</div>
@@ -2203,7 +2295,7 @@ function renderFreeFlowPhrases() {
     });
 
     container.appendChild(card);
-  });
+  }
 }
 
 function updateActiveAksharaAtTime(time) {
@@ -2212,18 +2304,33 @@ function updateActiveAksharaAtTime(time) {
   const aksharaSec = currentTalaData.aksharaSec || 0.53;
   const totalBeats = currentTalaData.totalBeats || 8;
   const currentAksharaNum = Math.floor(time / aksharaSec) + 1;
+  const currentAvartanamIdx = Math.floor((currentAksharaNum - 1) / totalBeats);
 
-  document.querySelectorAll('.score-cell.active-akshara, .akshara-cell.active-akshara').forEach(el => el.classList.remove('active-akshara'));
-  const activeCell = document.getElementById(`score-cell-${currentAksharaNum}`) || document.getElementById(`akshara-cell-${currentAksharaNum}`);
-  if (activeCell) {
-    activeCell.classList.add('active-akshara');
+  // Auto-page 4-line window if current line moves beyond visible 4 lines!
+  const totalAvartanams = currentTalaData.avartanams ? currentTalaData.avartanams.length : 1;
+  const targetWindow = Math.floor(currentAvartanamIdx / 4);
+  const maxWindow = Math.max(0, Math.ceil(totalAvartanams / 4) - 1);
+  const boundedTarget = Math.min(maxWindow, Math.max(0, targetWindow));
+
+  if (boundedTarget !== state.scoreLineWindow && currentAvartanamIdx < totalAvartanams) {
+    state.scoreLineWindow = boundedTarget;
+    renderTalaScoreBoard();
   }
 
-  const avartanamIdx = Math.floor((currentAksharaNum - 1) / totalBeats);
-  document.querySelectorAll('.score-avartanam-row.active-avartanam, .avartanam-card.active-avartanam').forEach(el => el.classList.remove('active-avartanam'));
-  const activeAvartanam = document.getElementById(`score-avartanam-${avartanamIdx}`) || document.getElementById(`avartanam-card-${avartanamIdx}`);
-  if (activeAvartanam) {
-    activeAvartanam.classList.add('active-avartanam');
+  // Highlight active line
+  document.querySelectorAll('.score-avartanam-row.active-avartanam').forEach(el => el.classList.remove('active-avartanam'));
+  const activeRow = document.getElementById(`score-avartanam-${currentAvartanamIdx}`);
+  if (activeRow) {
+    activeRow.classList.add('active-avartanam');
+  }
+
+  // Highlight active beat / note cell
+  document.querySelectorAll('.score-cell.active-akshara, .score-cell.active-sung-note, .score-cell.active-score-beat').forEach(el => {
+    el.classList.remove('active-akshara', 'active-sung-note', 'active-score-beat');
+  });
+  const activeCell = document.getElementById(`score-cell-${currentAksharaNum}`);
+  if (activeCell) {
+    activeCell.classList.add('active-akshara', 'active-sung-note', 'active-score-beat');
   }
 }
 
@@ -2260,11 +2367,14 @@ function initClassicalStageReady() {
     bpm: 88,
     talaId: state.activeTalaId,
     onBeatChange: (beat) => {
-      // Highlight ready cell if playing autonomous loop before audio load
+      // Highlight ready cell across Line 1 if playing autonomous loop before audio load
       if (!state.wavesurfer) {
-        document.querySelectorAll('.score-cell').forEach(c => c.classList.remove('active-beat-cell'));
+        document.querySelectorAll('.score-cell').forEach(c => c.classList.remove('active-beat-cell', 'active-sung-note', 'active-akshara'));
+        document.querySelectorAll('.score-avartanam-row').forEach(r => r.classList.remove('active-avartanam'));
+        const activeRow = document.getElementById('score-avartanam-ready-0');
+        if (activeRow) activeRow.classList.add('active-avartanam');
         const cell = document.getElementById(`score-cell-ready-${beat - 1}`);
-        if (cell) cell.classList.add('active-beat-cell');
+        if (cell) cell.classList.add('active-sung-note');
       }
     }
   });
@@ -2281,7 +2391,7 @@ function initClassicalStageReady() {
     tempoPill.textContent = '88 BPM';
   }
 
-  // Render initial ready Tala Score Grid
+  // Render initial ready 4-Line Tala Score Grid
   renderReadyTalaGrid();
 
   // Set mode to tala
@@ -2297,45 +2407,60 @@ function renderReadyTalaGrid() {
   // Update Anga Header
   const angaHeader = document.querySelector('.score-anga-header');
   if (angaHeader) {
-    angaHeader.innerHTML = tala.angas.map((anga, aIdx) => {
-      const divider = (aIdx < tala.angas.length - 1) ? '<div class="score-col-divider">|</div>' : '';
-      return `<div class="score-anga-col" style="flex: ${anga.count};">${anga.label}</div>${divider}`;
-    }).join('');
+    angaHeader.innerHTML = `
+      <div class="score-row-tag-spacer"></div>
+      ${tala.angas.map((anga, aIdx) => {
+        const divider = (aIdx < tala.angas.length - 1) ? '<div class="score-col-divider">|</div>' : '';
+        return `<div class="score-anga-col" style="flex: ${anga.count};">${anga.label}</div>${divider}`;
+      }).join('')}
+    `;
   }
 
-  const swaraSeq = ['S', 'R', 'G', 'M', 'P', 'D', 'N', 'Ṡ', 'Ṙ', 'Ġ', 'Ṁ', 'Ṗ', 'Ḋ', 'Ṅ'];
-  const defaultCells = tala.beats.map((b, i) => ({
-    display: swaraSeq[i % swaraSeq.length],
-    beat: b.beat,
-    kriya: b.name,
-  }));
+  // Classical 4-line Sarali Varisai exercise for initial ready state
+  const readyLines = [
+    { num: 1, swaras: ['S', 'R', 'G', 'M', 'P', 'D', 'N', 'Ṡ'] },
+    { num: 2, swaras: ['Ṡ', 'N', 'D', 'P', 'M', 'G', 'R', 'S'] },
+    { num: 3, swaras: ['S', 'R', 'S', 'R', 'S', 'R', 'G', 'M'] },
+    { num: 4, swaras: ['S', 'R', 'G', 'M', 'P', 'D', 'N', 'Ṡ'] },
+  ];
 
-  let cellOffset = 0;
-  const rowInnerHtml = tala.angas.map((anga, aIdx) => {
-    const angaCells = defaultCells.slice(cellOffset, cellOffset + anga.count);
-    const startIdx = cellOffset;
-    cellOffset += anga.count;
-    const divider = (aIdx < tala.angas.length - 1) ? '<div class="score-col-divider">|</div>' : '';
+  container.innerHTML = readyLines.map((line) => {
+    let cellOffset = 0;
+    const angasHtml = tala.angas.map((anga, aIdx) => {
+      const beats = tala.beats.slice(cellOffset, cellOffset + anga.count);
+      const swarasInAnga = line.swaras.slice(cellOffset, cellOffset + anga.count);
+      const startIdx = cellOffset;
+      cellOffset += anga.count;
+      const divider = (aIdx < tala.angas.length - 1) ? '<div class="score-col-divider">|</div>' : '';
+
+      return `
+        <div class="score-anga-cells" style="flex: ${anga.count};">
+          ${beats.map((b, bi) => {
+            const sw = swarasInAnga[bi] || 'S';
+            const beatGlobal = (line.num - 1) * tala.totalBeats + (startIdx + bi);
+            return `
+              <div class="score-cell" id="score-cell-ready-${beatGlobal}" data-beat="${b.beat}" title="Beat ${b.beat} (${b.name}) · ${sw}">
+                <div class="score-cell-top-meta">
+                  <span class="score-beat-indicator">B${b.beat}</span>
+                  <span class="score-kriya-symbol">${b.symbol || ''}</span>
+                </div>
+                <span class="score-swara-text">${sw}</span>
+                <span class="score-kriya-badge">${b.name.split(' ')[0]}</span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+        ${divider}
+      `;
+    }).join('');
+
     return `
-      <div class="score-anga-cells" style="flex: ${anga.count};">
-        ${angaCells.map((c, i) => `
-          <div class="score-cell" id="score-cell-ready-${startIdx + i}" title="Beat ${c.beat} (${c.kriya}) · ${c.display}">
-            <span class="score-swara-text">${c.display}</span>
-          </div>
-        `).join('')}
+      <div class="score-avartanam-row" id="score-avartanam-ready-${line.num - 1}">
+        <div class="score-row-tag">Line ${line.num}</div>
+        <div class="score-row-content">${angasHtml}</div>
       </div>
-      ${divider}
     `;
   }).join('');
-
-  container.innerHTML = `
-    <div class="score-avartanam-row" id="score-avartanam-ready">
-      ${rowInnerHtml}
-    </div>
-    <div class="tala-stage-cue">
-      <span class="tala-cue-icon">✦</span> Stage Active: Press ▶ below to practice ${tala.shortName} mudras, or upload/sing above to transcribe your vocal take.
-    </div>
-  `;
 }
 
 // ── Export Utilities ────────────────────────────────────────────────────────
