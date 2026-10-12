@@ -648,16 +648,21 @@ export function buildTalaGrid(notes, audioDuration, customAksharaSec = null, rag
       bestT0 = tCand;
     }
   }
-  const eduppuSec = Number(bestT0.toFixed(2));
+  let eduppu = bestT0;
+  while (eduppu > firstT + 0.08) { eduppu -= aksharaSec; }
+  while (eduppu < firstT - aksharaSec) { eduppu += aksharaSec; }
+  const eduppuSec = Math.max(0, Number(eduppu.toFixed(2)));
 
   // 2. Map notes into beat slots relative to eduppuSec
   // Filter out tiny micro-transients (< 0.08s) that create spurious split notes
   const notesByAkshara = {};
+  const tol = 0.10 * aksharaSec;
   for (const n of notes) {
     if (n.duration && n.duration < 0.08 && n.confidence && n.confidence < 0.35) continue;
-    const relBeats = (n.startTime - eduppuSec) / aksharaSec;
-    const slot = Math.max(1, Math.round(relBeats) + 1);
+    const relBeats = (n.startTime - eduppuSec + tol) / aksharaSec;
+    const slot = Math.max(1, Math.floor(relBeats) + 1);
     if (!notesByAkshara[slot]) notesByAkshara[slot] = [];
+    if (!n.cFmt) n.cFmt = formatCarnaticSwara(n, raga);
     notesByAkshara[slot].push(n);
   }
 
@@ -713,7 +718,7 @@ export function buildTalaGrid(notes, audioDuration, customAksharaSec = null, rag
         // No new onset: check if previous note was held across into this beat
         const priorNotes = notes.filter(n => n.startTime < beatStartTime);
         const lastSung = priorNotes[priorNotes.length - 1];
-        if (lastSung && lastSung.endTime > beatStartTime + (aksharaSec * 0.32)) {
+        if (lastSung && lastSung.endTime > beatStartTime + (aksharaSec * 0.28)) {
           // Sustained note extension (Karvai = 1 akshara hold)
           cellDisplay = ',';
           cellType = 'karvai';
@@ -754,8 +759,12 @@ export function buildTalaGrid(notes, audioDuration, customAksharaSec = null, rag
         isDoubleOverline,
         startTime: beatStartTime,
         endTime: beatEndTime,
+        actualNoteStart: notesInBeat.length > 0 ? notesInBeat[0].startTime : (activeNote ? activeNote.startTime : null),
+        actualNoteEnd: notesInBeat.length > 0 ? notesInBeat[notesInBeat.length - 1].endTime : (activeNote ? activeNote.endTime : null),
         kriya,
         note: activeNote,
+        notes: notesInBeat,
+        isKarvaiOf: cellType === 'karvai' && activeNote ? activeNote.index : null,
       });
     }
 

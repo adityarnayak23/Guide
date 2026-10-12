@@ -30,9 +30,14 @@ export class LuminousWaveform {
     this.currentTime = 0;
     this.duration = 1;
     this.activeBeatIndex = -1;
+    this.activeNote = null;
 
     this.initCanvas();
     this.initEvents();
+  }
+
+  setActiveNote(note) {
+    this.activeNote = note;
   }
 
   initCanvas() {
@@ -194,13 +199,27 @@ export class LuminousWaveform {
       });
     }
 
-    // 4. Draw Playhead Needle (Crisp Terracotta)
+    // 4. Draw Playhead Needle and Vocal Glow Resonance Aura
     const playX = (this.currentTime / this.duration) * w;
     ctx.save();
-    ctx.strokeStyle = '#9B2C2C';
-    ctx.lineWidth = 2;
-    ctx.shadowColor = 'rgba(155, 44, 44, 0.35)';
-    ctx.shadowBlur = 6;
+    if (this.activeNote) {
+      // Golden vocal resonance bloom
+      ctx.shadowColor = 'rgba(212, 175, 55, 0.9)';
+      ctx.shadowBlur = 16;
+      ctx.fillStyle = 'rgba(212, 175, 55, 0.35)';
+      ctx.beginPath();
+      ctx.arc(playX, midY, 8, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#FFE066';
+      ctx.beginPath();
+      ctx.arc(playX, midY, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.strokeStyle = this.activeNote ? '#D4AF37' : '#9B2C2C';
+    ctx.lineWidth = this.activeNote ? 2.5 : 2;
+    ctx.shadowColor = this.activeNote ? 'rgba(212, 175, 55, 0.75)' : 'rgba(155, 44, 44, 0.35)';
+    ctx.shadowBlur = this.activeNote ? 10 : 6;
     ctx.beginPath();
     ctx.moveTo(playX, 0);
     ctx.lineTo(playX, h);

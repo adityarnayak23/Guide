@@ -194,9 +194,10 @@ export class TalaHandAnimator {
     });
   }
 
-  syncWithTime(currentTime, aksharaSec = 0.53) {
+  syncWithTime(currentTime, aksharaSec = 0.53, eduppuSec = 0) {
     if (!aksharaSec || aksharaSec <= 0) return;
-    const totalAksharas = Math.floor(currentTime / aksharaSec);
+    const elapsed = Math.max(0, currentTime - eduppuSec);
+    const totalAksharas = Math.floor(elapsed / aksharaSec);
     const beatInAvartanam = (totalAksharas % 8) + 1;
     if (beatInAvartanam !== this.currentBeat) {
       this.updateBeat(beatInAvartanam);

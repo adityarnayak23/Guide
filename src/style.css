@@ -2954,31 +2954,77 @@ body::before {
   font-size: 0.75rem;
 }
 
-/* Synchronized Radiant Note Highlight */
+/* Rhythm Tala Beat Cursor */
 .score-cell.active-akshara,
-.score-cell.active-sung-note,
 .score-cell.active-score-beat {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.34) 0%, rgba(250, 204, 21, 0.44) 100%) !important;
+  border-color: rgba(212, 175, 55, 0.75) !important;
+  background: rgba(212, 175, 55, 0.08) !important;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.25), inset 0 0 6px rgba(212, 175, 55, 0.12) !important;
+}
+
+/* Audio-Synchronized Radiant Sung Note Glow (Strictly when sung in vocal audio) */
+.score-cell.active-sung-note {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.42) 0%, rgba(250, 204, 21, 0.52) 100%) !important;
   border-color: #D4AF37 !important;
   border-width: 2px !important;
   transform: translateY(-2px) scale(1.06);
-  box-shadow: 0 0 20px rgba(212, 175, 55, 0.6), inset 0 0 10px rgba(212, 175, 55, 0.3) !important;
+  box-shadow: 0 0 24px rgba(212, 175, 55, 0.8), inset 0 0 12px rgba(250, 204, 21, 0.45) !important;
   z-index: 5;
+  transition: transform 0.08s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.08s ease, background 0.08s ease;
 }
 
-.score-cell.active-akshara .score-swara-text,
-.score-cell.active-sung-note .score-swara-text,
-.score-cell.active-score-beat .score-swara-text {
+.score-cell.active-sung-note .score-swara-text {
   color: #854D0E !important;
   font-weight: 700;
-  text-shadow: 0 0 12px rgba(212, 175, 55, 0.6);
+  text-shadow: 0 0 14px rgba(212, 175, 55, 0.7);
 }
 
-[data-theme="dark"] .score-cell.active-akshara .score-swara-text,
-[data-theme="dark"] .score-cell.active-sung-note .score-swara-text,
-[data-theme="dark"] .score-cell.active-score-beat .score-swara-text {
+[data-theme="dark"] .score-cell.active-sung-note .score-swara-text {
   color: #FEF08A !important;
-  text-shadow: 0 0 16px rgba(250, 204, 21, 0.85);
+  text-shadow: 0 0 18px rgba(250, 204, 21, 0.95);
+}
+
+/* Sustained Karvai hold glow */
+.score-cell.karvai.active-sung-note {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(245, 158, 11, 0.35) 100%) !important;
+  border-color: rgba(212, 175, 55, 0.85) !important;
+  box-shadow: 0 0 18px rgba(212, 175, 55, 0.5) !important;
+  transform: translateY(-1px) scale(1.03);
+}
+
+/* Micro-Swara Glyph Highlight: individual swaras inside 2nd and 3rd speed cells */
+.score-swara-glyph {
+  display: inline-block;
+  padding: 0 2px;
+  border-radius: 4px;
+  transition: color 0.07s ease, text-shadow 0.07s ease, transform 0.07s ease;
+}
+
+.score-swara-glyph.active-swara-glyph {
+  color: #713F12 !important;
+  font-weight: 800;
+  transform: scale(1.22);
+  text-shadow: 0 0 12px #D4AF37, 0 0 22px rgba(250, 204, 21, 0.95) !important;
+  filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.85));
+}
+
+[data-theme="dark"] .score-swara-glyph.active-swara-glyph {
+  color: #FFFBEB !important;
+  text-shadow: 0 0 14px #FACC15, 0 0 28px rgba(250, 204, 21, 1) !important;
+  filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.9));
+}
+
+/* Freeflow active chip sync */
+.phrase-chip.active-sung-chip {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.38) 0%, rgba(250, 204, 21, 0.48) 100%) !important;
+  border-color: #D4AF37 !important;
+  color: #854D0E !important;
+  transform: scale(1.12);
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.65) !important;
+}
+
+[data-theme="dark"] .phrase-chip.active-sung-chip {
+  color: #FEF08A !important;
 }
 
 /* Eliminate clutter: Hide horizontal scroll timeline and 1-by-1 single note card */

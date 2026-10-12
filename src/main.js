@@ -1666,6 +1666,8 @@ function startPlaybackSyncLoop() {
     const totalDur = state.wavesurfer.getDuration() || (state.audioBuffer?.duration || 1);
     const aksharaSec = (state.talaData || state.adiTalaData)?.aksharaSec || (60 / (state.detectedBpm || 76));
 
+    const eduppuSec = (state.talaData || state.adiTalaData)?.eduppuSec || 0;
+
     // 1. Sync luminous waveform playhead
     if (state.luminousWaveform) {
       state.luminousWaveform.setTime(time);
@@ -1679,15 +1681,15 @@ function startPlaybackSyncLoop() {
 
     // 3. Sync Top Tala Hand Stage with audio
     if (state.topHandStage) {
-      state.topHandStage.syncWithTime(time, aksharaSec);
+      state.topHandStage.syncWithTime(time, aksharaSec, eduppuSec);
     }
 
     // 4. Sync Bottom Tala Hand Stage with audio (all talas, not just adi)
     if (state.carnaticMode === 'tala' && state.handStage && (state.talaData || state.adiTalaData)) {
-      state.handStage.syncWithTime(time, aksharaSec);
+      state.handStage.syncWithTime(time, aksharaSec, eduppuSec);
     }
 
-    // 5. Sync Tala Score Grid active akshara cell + avartanam row
+    // 5. Sync Tala Score Grid active akshara cell + avartanam row + sung note glow
     if (state.carnaticMode === 'tala') {
       updateActiveAksharaAtTime(time);
     }
@@ -1711,6 +1713,7 @@ function stopPlaybackSyncLoop() {
     cancelAnimationFrame(state.rafLoopId);
     state.rafLoopId = null;
   }
+  clearAllNoteGlows();
 }
 
 // ── Render Horizontal Swaras Track (Directly Under Waveform) ────────────────
@@ -1835,6 +1838,10 @@ function updateActiveNoteAtTime(time) {
 
     // Update Cinema Subtitle Display Card
     updateSubtitleDisplay(note, time);
+  } else if (noteIdx === -1 && state.activeNoteIndex !== -1) {
+    state.activeNoteIndex = -1;
+    document.querySelectorAll('.horizontal-swara-block.active-sung-note').forEach(b => b.classList.remove('active-sung-note'));
+    document.querySelectorAll('.sub-ribbon-item.active').forEach(r => r.classList.remove('active'));
   }
 }
 
@@ -1964,6 +1971,11 @@ function renderCarnaticStudio() {
   state.talaData = buildTalaGrid(state.swaraNotes, dur, state.beatAnalysis.aksharaSec, raga, activeTalaToApply);
   state.adiTalaData = state.talaData;
 
+  if (state.luminousWaveform && state.talaData.avartanams) {
+    const beatTimestamps = state.talaData.avartanams.flatMap(a => a.cells.map(c => c.startTime));
+    state.luminousWaveform.setBeatTimestamps(beatTimestamps);
+  }
+
   state.freeFlowData = buildFreeFlowPhrases(state.swaraNotes, raga);
 
   // Automatically update and lock the Top Tala Stage to the identified probable BPM!
@@ -2055,6 +2067,11 @@ function setCarnaticTala(talaId, isAuto = false) {
     const aksharaSec = state.beatAnalysis ? state.beatAnalysis.aksharaSec : null;
     state.talaData = buildTalaGrid(state.swaraNotes, dur, aksharaSec, state.raga, talaDef.id);
     state.adiTalaData = state.talaData;
+
+    if (state.luminousWaveform && state.talaData.avartanams) {
+      const beatTimestamps = state.talaData.avartanams.flatMap(a => a.cells.map(c => c.startTime));
+      state.luminousWaveform.setBeatTimestamps(beatTimestamps);
+    }
 
     // Update Tempo Pill
     const tempoPill = document.getElementById('stage-tempo-pill');
@@ -2185,13 +2202,18 @@ function renderTalaScoreBoard() {
     row.querySelectorAll('.score-cell').forEach(cellEl => {
       cellEl.addEventListener('click', (e) => {
         e.stopPropagation();
-        const start = parseFloat(cellEl.dataset.start);
-        if (!isNaN(start) && state.wavesurfer) {
+        const glyph = e.target.closest('.score-swara-glyph');
+        let seekTime = parseFloat(cellEl.dataset.noteStart || cellEl.dataset.start);
+        if (glyph && glyph.dataset.start) {
+          const glyphStart = parseFloat(glyph.dataset.start);
+          if (!isNaN(glyphStart)) seekTime = glyphStart;
+        }
+        if (!isNaN(seekTime) && state.wavesurfer) {
           if (typeof state.wavesurfer.setTime === 'function') {
-            state.wavesurfer.setTime(start);
+            state.wavesurfer.setTime(seekTime);
           } else {
             const dur = state.wavesurfer.getDuration() || state.audioBuffer.duration;
-            state.wavesurfer.seekTo(start / dur);
+            state.wavesurfer.seekTo(seekTime / dur);
           }
           state.wavesurfer.play();
         }
@@ -2204,7 +2226,8 @@ function renderTalaScoreBoard() {
 
 function renderScoreCellHtml(cell) {
   let swaraClass = '';
-  if (cell.display === ',' || cell.display === '·') swaraClass += ' karvai';
+  if (cell.type === 'karvai' || cell.display === ',') swaraClass += ' karvai';
+  else if (cell.type === 'rest' || cell.display === '·') swaraClass += ' rest';
   else if (cell.display === ';') swaraClass += ' semicolon';
   if (cell.isDoubleOverline) swaraClass += ' double-overline';
   else if (cell.isOverline) swaraClass += ' overline';
@@ -2212,13 +2235,32 @@ function renderScoreCellHtml(cell) {
   const kriyaShort = cell.kriya ? (cell.kriya.name || cell.kriya.label || '') : '';
   const kriyaSymbol = cell.kriya ? (cell.kriya.symbol || '') : '';
 
+  let glyphsHtml = '';
+  if (cell.notes && cell.notes.length > 1) {
+    glyphsHtml = cell.notes.map(n => {
+      const sym = n.cFmt ? n.cFmt.symbol : (n.formatted || n.swara?.carnatic || '');
+      return `<span class="score-swara-glyph" id="swara-glyph-${n.index}" data-note-index="${n.index}" data-start="${n.startTime}" data-end="${n.endTime}">${sym}</span>`;
+    }).join(' ');
+  } else if (cell.note && (cell.type === 'swara' || cell.type === 'karvai')) {
+    glyphsHtml = `<span class="score-swara-glyph" id="swara-glyph-${cell.note.index}" data-note-index="${cell.note.index}" data-start="${cell.note.startTime}" data-end="${cell.note.endTime}">${cell.display}</span>`;
+  } else {
+    glyphsHtml = `<span class="score-swara-glyph glyph-rest">${cell.display}</span>`;
+  }
+
+  const noteIdsAttr = (cell.notes && cell.notes.length > 0)
+    ? cell.notes.map(n => n.index).join(',')
+    : (cell.note ? String(cell.note.index) : '');
+
+  const noteStartAttr = cell.actualNoteStart != null ? cell.actualNoteStart : cell.startTime;
+  const noteEndAttr = cell.actualNoteEnd != null ? cell.actualNoteEnd : cell.endTime;
+
   return `
-    <div class="score-cell${swaraClass}" id="score-cell-${cell.aksharaNumber}" data-akshara="${cell.aksharaNumber}" data-beat="${cell.beat}" data-start="${cell.startTime}" data-end="${cell.endTime}" title="Akshara ${cell.aksharaNumber} (Beat ${cell.beat}) · ${kriyaShort}\n${cell.display} · Time: ${cell.startTime}s - ${cell.endTime}s\nClick to seek audio">
+    <div class="score-cell${swaraClass}" id="score-cell-${cell.aksharaNumber}" data-akshara="${cell.aksharaNumber}" data-beat="${cell.beat}" data-start="${cell.startTime}" data-end="${cell.endTime}" data-note-start="${noteStartAttr}" data-note-end="${noteEndAttr}" data-notes="${noteIdsAttr}" data-karvai-of="${cell.isKarvaiOf || ''}" data-type="${cell.type}" title="Akshara ${cell.aksharaNumber} (Beat ${cell.beat}) · ${kriyaShort}\n${cell.display} · Time: ${cell.startTime}s - ${cell.endTime}s\nClick to seek audio">
       <div class="score-cell-top-meta">
         <span class="score-beat-indicator">B${cell.beat}</span>
         ${kriyaSymbol ? `<span class="score-kriya-symbol">${kriyaSymbol}</span>` : ''}
       </div>
-      <span class="score-swara-text">${cell.display}</span>
+      <span class="score-swara-text">${glyphsHtml}</span>
       ${kriyaShort ? `<span class="score-kriya-badge">${kriyaShort.split(' ')[0]}</span>` : ''}
     </div>
   `;
@@ -2334,13 +2376,115 @@ function updateActiveAksharaAtTime(time) {
     activeRow.classList.add('active-avartanam');
   }
 
-  // Highlight active beat / note cell
-  document.querySelectorAll('.score-cell.active-akshara, .score-cell.active-sung-note, .score-cell.active-score-beat').forEach(el => {
-    el.classList.remove('active-akshara', 'active-sung-note', 'active-score-beat');
+  // Highlight active rhythmic beat cell (kriya pulse)
+  document.querySelectorAll('.score-cell.active-akshara, .score-cell.active-score-beat').forEach(el => {
+    el.classList.remove('active-akshara', 'active-score-beat');
   });
-  const activeCell = document.getElementById(`score-cell-${currentAksharaNum}`);
-  if (activeCell) {
-    activeCell.classList.add('active-akshara', 'active-sung-note', 'active-score-beat');
+  const activeBeatCell = document.getElementById(`score-cell-${currentAksharaNum}`);
+  if (activeBeatCell) {
+    activeBeatCell.classList.add('active-akshara', 'active-score-beat');
+  }
+
+  // Ground-truth vocal audio note glow synchronization
+  syncSungNoteGlow(time, currentAksharaNum);
+}
+
+function syncSungNoteGlow(time, currentAksharaNum) {
+  if (!state.swaraNotes || state.swaraNotes.length === 0) {
+    clearAllNoteGlows();
+    return;
+  }
+
+  // Find note actively vibrating in the vocal track at 'time'
+  // 30ms window ensures continuous smooth visual aura through micro-phoneme transitions
+  const activeNote = state.swaraNotes.find(n => time >= (n.startTime - 0.03) && time <= (n.endTime + 0.03));
+
+  if (!activeNote) {
+    // Vocal silence, breath gap, or unvoiced rest: extinguish note glow immediately
+    clearAllNoteGlows();
+    state.activeNoteIndex = -1;
+    return;
+  }
+
+  const noteIdx = activeNote.index;
+  state.activeNoteIndex = noteIdx;
+
+  // 1. Locate the score cell corresponding to this sung note at this moment
+  let targetCellEl = null;
+  const currentTalaData = state.talaData || state.adiTalaData;
+  if (currentTalaData && currentTalaData.avartanams) {
+    const candidateCells = [];
+    for (const av of currentTalaData.avartanams) {
+      for (const cell of av.cells) {
+        if (cell.notes && cell.notes.some(n => n.index === noteIdx)) {
+          candidateCells.push(cell);
+        } else if (cell.type === 'karvai' && cell.isKarvaiOf === noteIdx) {
+          candidateCells.push(cell);
+        }
+      }
+    }
+    const matchedCell = candidateCells.find(c => time >= (c.startTime - 0.06) && time <= (c.endTime + 0.06)) || candidateCells[0];
+    if (matchedCell) {
+      targetCellEl = document.getElementById(`score-cell-${matchedCell.aksharaNumber}`);
+    }
+  }
+
+  if (!targetCellEl) {
+    const candidateCells = document.querySelectorAll(`.score-cell[data-notes*="${noteIdx}"], .score-cell[data-karvai-of="${noteIdx}"]`);
+    if (candidateCells.length === 1) {
+      targetCellEl = candidateCells[0];
+    } else if (candidateCells.length > 1) {
+      for (const el of candidateCells) {
+        const start = parseFloat(el.dataset.start);
+        const end = parseFloat(el.dataset.end);
+        if (time >= (start - 0.06) && time <= (end + 0.06)) {
+          targetCellEl = el;
+          break;
+        }
+      }
+      if (!targetCellEl) targetCellEl = candidateCells[0];
+    }
+  }
+
+  // Update glowing score cell
+  document.querySelectorAll('.score-cell.active-sung-note').forEach(el => {
+    if (el !== targetCellEl) el.classList.remove('active-sung-note');
+  });
+  if (targetCellEl) {
+    targetCellEl.classList.add('active-sung-note');
+  }
+
+  // 2. Micro-Swara Glyph Highlight: light up the exact swara inside multi-note cells (e.g. "G₂" inside "G₂ R₂")
+  document.querySelectorAll('.score-swara-glyph.active-swara-glyph').forEach(el => {
+    el.classList.remove('active-swara-glyph');
+  });
+  const glyphEl = document.getElementById(`swara-glyph-${noteIdx}`);
+  if (glyphEl) {
+    glyphEl.classList.add('active-swara-glyph');
+  }
+
+  // 3. Highlight Horizontal Track block (if visible)
+  const activeBlock = document.getElementById(`swara-block-${noteIdx}`);
+  if (activeBlock) {
+    document.querySelectorAll('.horizontal-swara-block.active-sung-note').forEach(b => {
+      if (b !== activeBlock) b.classList.remove('active-sung-note');
+    });
+    activeBlock.classList.add('active-sung-note');
+  }
+
+  // 4. Update Luminous Waveform active vocal aura
+  if (state.luminousWaveform) {
+    state.luminousWaveform.setActiveNote(activeNote);
+  }
+}
+
+function clearAllNoteGlows() {
+  document.querySelectorAll('.score-cell.active-sung-note').forEach(el => el.classList.remove('active-sung-note'));
+  document.querySelectorAll('.score-swara-glyph.active-swara-glyph').forEach(el => el.classList.remove('active-swara-glyph'));
+  document.querySelectorAll('.horizontal-swara-block.active-sung-note').forEach(el => el.classList.remove('active-sung-note'));
+  document.querySelectorAll('.phrase-chip.active-sung-chip').forEach(el => el.classList.remove('active-sung-chip'));
+  if (state.luminousWaveform) {
+    state.luminousWaveform.setActiveNote(null);
   }
 }
 
@@ -2348,9 +2492,18 @@ function updateActiveFreeflowPhraseAtTime(time) {
   if (!state.freeFlowData) return;
   const phraseIdx = state.freeFlowData.findIndex(p => time >= p.startTime && time <= p.endTime);
   document.querySelectorAll('.freeflow-phrase-card.active-phrase').forEach(el => el.classList.remove('active-phrase'));
+  document.querySelectorAll('.phrase-chip.active-sung-chip').forEach(el => el.classList.remove('active-sung-chip'));
+
   if (phraseIdx !== -1) {
     const card = document.getElementById(`freeflow-phrase-${phraseIdx}`);
-    if (card) card.classList.add('active-phrase');
+    if (card) {
+      card.classList.add('active-phrase');
+      const activeNote = state.swaraNotes?.find(n => time >= (n.startTime - 0.03) && time <= (n.endTime + 0.03));
+      if (activeNote) {
+        const chip = card.querySelector(`.phrase-chip[data-start="${activeNote.startTime}"]`);
+        if (chip) chip.classList.add('active-sung-chip');
+      }
+    }
   }
 }
 

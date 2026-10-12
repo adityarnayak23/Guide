@@ -558,9 +558,10 @@ export class CarnaticHandStage {
   /**
    * Synchronize hand directly with audio playback time and Akshara beat duration.
    */
-  syncWithTime(currentTime, aksharaSec) {
+  syncWithTime(currentTime, aksharaSec, eduppuSec = 0) {
     if (!aksharaSec || aksharaSec <= 0) return;
-    const currentAksharaTotal = Math.floor(currentTime / aksharaSec);
+    const elapsed = Math.max(0, currentTime - eduppuSec);
+    const currentAksharaTotal = Math.floor(elapsed / aksharaSec);
     const beatInAvartanam = (currentAksharaTotal % this.totalBeats) + 1;
 
     if (beatInAvartanam !== this.currentBeat) {
