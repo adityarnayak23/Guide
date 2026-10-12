@@ -1424,6 +1424,8 @@ async function startAnalysis() {
     state.audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
 
     // Call the Revamped Vocal Recognition Engine (TorchCrepe Neural Server with Client MIR Fallback)
+    const activeTonic = state.isAutoSa ? null : (state.customTonicFreq || calculateNoteFreq(state.selectedRoot || 'D', state.selectedOctave || 3));
+    const activeRaga = state.raga ? (state.raga.name || state.raga) : null;
     const result = await recognizeVocalNotes(
       state.audioBlob,
       state.audioBuffer,
@@ -1431,7 +1433,8 @@ async function startAnalysis() {
         progressBar.style.width = `${Math.round(progress * 100)}%`;
         if (message) statusText.textContent = message;
       },
-      state.customTonicFreq
+      activeTonic,
+      activeRaga
     );
 
     state.swaraNotes = result.notes;

@@ -71,7 +71,9 @@ def hz_to_western(freq):
         "midi": rounded_midi
     }
 
-def extract_pitch_plateaus(times, med_pitch, voiced_mask, min_dur=0.14):
+device = torch.device("mps" if torch.backends.mps.is_available() else ("cuda" if torch.cuda.is_available() else "cpu"))
+
+def extract_pitch_plateaus(times, med_pitch, voiced_mask, min_dur=0.12):
     """
     Extracts contiguous stable pitch plateaus where pitch remains within +/-55 cents.
     """
@@ -128,17 +130,21 @@ def extract_pitch_plateaus(times, med_pitch, voiced_mask, min_dur=0.14):
 
     return plateaus
 
-def auto_detect_tonic_sa(plateaus, voiced_pitches):
+def auto_detect_tonic_sa(plateaus, voiced_pitches, user_hint_hz=None):
     """
     State of the art Indian Art Music Consonance Tonic Detector.
     Identifies the singer's Adhara Shadja (Sa) by testing candidate plateaus against
-    the fundamental consonances: Sa (0¢), Taar Sa (1200¢), Pa (700¢), ma (500¢),
-    Ga (400/300¢), Re (200/100¢), Dha (900/800¢), Ni (1100/1000¢).
+    the fundamental consonances: Sa (0¢), Taar Sa (1200¢), Pa (700¢), Mandra Pa (-500¢),
+    Mandra Dha (-300¢), Ma (500¢), Ga (400/300¢), Re (200/100¢).
+    Strictly bounded in realistic human vocal singing ranges (115 Hz - 320 Hz)
+    to completely eliminate octave folding and sub-harmonic errors.
     """
     if not plateaus:
         fallback = float(np.median(voiced_pitches)) if len(voiced_pitches) > 0 else 146.83
+        while fallback < 115.0: fallback *= 2.0
+        while fallback > 320.0: fallback /= 2.0
         w = hz_to_western(fallback)
-        return round(fallback, 1), w["noteStr"], 0.40, w["octave"]
+        return round(fallback, 1), w["noteStr"], 0.50, w["octave"]
 
     def energy_at_cents(base_hz, cents_offset, tol_cents=45):
         target_hz = base_hz * (2.0 ** (cents_offset / 1200.0))
@@ -149,17 +155,24 @@ def auto_detect_tonic_sa(plateaus, voiced_pitches):
                 e += p['dur'] * math.exp(-(diff**2) / (2 * 18**2))
         return e
 
-    # Candidates: actual sung pitch plateaus + their octave subharmonics
+    # Ground candidates strictly in authentic Indian vocal singing range: 115 Hz to 310 Hz
     candidates = []
     for p in plateaus:
-        candidates.append(p['hz'])
-        candidates.append(p['hz'] / 2.0)
-    candidates = sorted(list(set([c for c in candidates if 80 <= c <= 360])))
+        hz = p['hz']
+        if 115 <= hz <= 310:
+            candidates.append(hz)
+        if 230 <= hz <= 620:
+            candidates.append(hz / 2.0)
+        if 65 <= hz <= 155:
+            candidates.append(hz * 2.0)
+
+    candidates = sorted(list(set([round(c, 1) for c in candidates if 115 <= c <= 310])))
 
     if not candidates:
-        fallback = 146.83
-        w = hz_to_western(fallback)
-        return fallback, w["noteStr"], 0.50, w["octave"]
+        fallback = float(np.median(voiced_pitches)) if len(voiced_pitches) > 0 else 146.83
+        while fallback < 115.0: fallback *= 2.0
+        while fallback > 320.0: fallback /= 2.0
+        candidates = [round(fallback, 1)]
 
     best_score = -1.0
     best_cand = candidates[0]
@@ -168,29 +181,35 @@ def auto_detect_tonic_sa(plateaus, voiced_pitches):
         e_sa = energy_at_cents(s, 0)
         e_taar_sa = energy_at_cents(s, 1200)
         e_pa = energy_at_cents(s, 700)
+        e_mandra_pa = energy_at_cents(s, -500)
+        e_mandra_dha = energy_at_cents(s, -300)
         e_ma = energy_at_cents(s, 500)
         e_ga = max(energy_at_cents(s, 400), energy_at_cents(s, 300))
         e_re = max(energy_at_cents(s, 200), energy_at_cents(s, 100))
         e_dha = max(energy_at_cents(s, 900), energy_at_cents(s, 800))
         e_ni = max(energy_at_cents(s, 1100), energy_at_cents(s, 1000))
 
+        # Sa is paramount: must have strong energy at 0 or 1200
         score = (
-            e_sa * 2.5 +
-            e_taar_sa * 2.0 +
+            e_sa * 4.0 +
+            e_taar_sa * 3.0 +
             e_pa * 2.5 +
-            e_ma * 1.5 +
-            e_ga * 1.2 +
-            e_re * 1.0 +
+            e_mandra_pa * 2.0 +
+            e_mandra_dha * 1.5 +
+            e_ma * 1.2 +
+            e_re * 1.2 +
+            e_ga * 1.0 +
             e_dha * 1.0 +
-            e_ni * 1.0
+            e_ni * 0.8
         )
 
         # Indian Music Grounding: A valid Sa must be actively sung (or present in Taar Sa)
-        if e_sa < 0.15 and e_taar_sa < 0.15:
-            score *= 0.2
-        # And must have either Pancham (700 cents) or Madhyam (500 cents)
-        if e_pa < 0.08 and e_ma < 0.08:
-            score *= 0.1
+        if e_sa < 0.12 and e_taar_sa < 0.12:
+            score *= 0.25
+
+        # Boost candidate if it aligns with user hint
+        if user_hint_hz and abs(1200 * math.log2(s / user_hint_hz)) < 60:
+            score *= 1.4
 
         if score > best_score:
             best_score = score
@@ -200,10 +219,10 @@ def auto_detect_tonic_sa(plateaus, voiced_pitches):
     sa_matches = []
     for p in plateaus:
         diff0 = abs(1200 * math.log2(p['hz'] / best_cand))
-        if diff0 <= 40:
+        if diff0 <= 35:
             sa_matches.append(p['hz'])
         diff1 = abs(1200 * math.log2((p['hz'] / 2.0) / best_cand))
-        if diff1 <= 40:
+        if diff1 <= 35:
             sa_matches.append(p['hz'] / 2.0)
 
     if sa_matches:
@@ -216,7 +235,7 @@ def auto_detect_tonic_sa(plateaus, voiced_pitches):
 
     return sa_hz, western["noteStr"], conf, western["octave"]
 
-def segment_swaras(times, raw_pitch, med_pitch, voiced_mask, sa_hz, sr, hop_length, audio):
+def segment_swaras(times, raw_pitch, med_pitch, voiced_mask, sa_hz, sr, hop_length, audio, raga=None):
     """
     State-of-the-Art Dual-Stream Vocal Transcription & Gamaka Decomposition Engine.
     Combines:
@@ -355,18 +374,40 @@ def segment_swaras(times, raw_pitch, med_pitch, voiced_mask, sa_hz, sr, hop_leng
     # 5. Build Final Note Records with Option 1 Gamaka Decomposition
     final_notes = []
     for idx, (sw, st, et, dur, p_list, g_list) in enumerate(merged_notes):
-        final_notes.append(create_note_record(sw, st, et, dur, p_list, g_list, sa_hz, idx + 1))
+        final_notes.append(create_note_record(sw, st, et, dur, p_list, g_list, sa_hz, idx + 1, raga=raga))
 
     return final_notes
 
-def create_note_record(sw_tuple, start_t, end_t, dur, pitch_samples, gamaka_samples, sa_hz, index):
+def create_note_record(sw_tuple, start_t, end_t, dur, pitch_samples, gamaka_samples, sa_hz, index, raga=None):
     oct_shift, sw_idx = sw_tuple
-    sw_def = SWARA_TABLE[sw_idx]
+    sw_def = dict(SWARA_TABLE[sw_idx])
     
+    # Raga-aware enharmonic refinement
+    if raga:
+        raga_clean = raga.lower()
+        if "abhogi" in raga_clean:
+            if sw_idx == 2:
+                sw_def["carnatic"] = "R₂"
+                sw_def["carnaticName"] = "Chatushruti Rishabham"
+            elif sw_idx == 3:
+                sw_def["carnatic"] = "G₂"
+                sw_def["carnaticName"] = "Sadharana Gandharam"
+            elif sw_idx == 5:
+                sw_def["carnatic"] = "M₁"
+                sw_def["carnaticName"] = "Shuddha Madhyamam"
+            elif sw_idx == 9:
+                sw_def["carnatic"] = "D₂"
+                sw_def["carnaticName"] = "Chatushruti Dhaivatham"
+
     dot = "̇" if oct_shift > 0 else ("̣" if oct_shift < 0 else "")
     dot_dev = "ं" if oct_shift > 0 else ("॒" if oct_shift < 0 else "")
     dev_str = f"{sw_def['devanagari']}{dot_dev}" if oct_shift != 0 else sw_def['devanagari']
-    carnatic_str = f"{sw_def['carnatic']}{dot}"
+    
+    # Clean sthayi dot placement on root letter (e.g. Ṡ, Ṙ₂, G̣₂)
+    base_sym = sw_def['carnatic'][0]
+    sub_sym = sw_def['carnatic'][1:] if len(sw_def['carnatic']) > 1 else ""
+    carnatic_str = f"{base_sym}{dot}{sub_sym}"
+    
     saptak = "Taar" if oct_shift > 0 else ("Mandra" if oct_shift < 0 else "Madhya")
     saptak_label = "Taar Saptak (High)" if oct_shift > 0 else ("Mandra Saptak (Low)" if oct_shift < 0 else "Madhya Saptak (Mid)")
 
@@ -400,7 +441,7 @@ def create_note_record(sw_tuple, start_t, end_t, dur, pitch_samples, gamaka_samp
     elif glide_dir is not None:
         gamaka_type = "jaaru"
         gamaka_label = f"Jaaru ({'Ascending ↗' if glide_dir == 'ascending' else 'Descending ↘'})"
-    elif dur >= 0.45:
+    elif dur >= 0.40:
         gamaka_type = "karvai"
         gamaka_label = "Sustained Karvai (Hold)"
     else:
@@ -433,8 +474,7 @@ def create_note_record(sw_tuple, start_t, end_t, dur, pitch_samples, gamaka_samp
 
 @app.get("/api/health")
 def health():
-    device = "mps" if torch.backends.mps.is_available() else "cpu"
-    return {"status": "ok", "engine": "NoteScope Deep Carnatic Neural Engine v3.0", "device": device}
+    return {"status": "ok", "engine": "NoteScope Deep Carnatic Neural Engine v3.0", "device": str(device)}
 
 @app.post("/api/analyze-vocal")
 async def analyze_vocal(
@@ -456,8 +496,81 @@ async def analyze_vocal(
     effective_raga = raga or raga_q or "abhogi"
     effective_tonic = tonic_freq if tonic_freq is not None else tonic_freq_q
 
-    result = swara_engine.analyze(audio, sr=sr, raga=effective_raga, user_sa_hz=effective_tonic)
-    return result
+    # 1. State-of-the-Art Deep TorchCrepe Pitch Extraction on GPU/MPS
+    audio_tensor = torch.from_numpy(audio).float().unsqueeze(0)
+    try:
+        f0, periodicity = torchcrepe.predict(
+            audio_tensor.to(device),
+            sample_rate=16000,
+            hop_length=160,
+            fmin=55,
+            fmax=650,
+            model="tiny",
+            batch_size=512,
+            decoder=torchcrepe.decode.viterbi,
+            device=device,
+            return_periodicity=True
+        )
+    except Exception as mps_err:
+        print(f"MPS inference warning, falling back to CPU: {mps_err}")
+        f0, periodicity = torchcrepe.predict(
+            audio_tensor,
+            sample_rate=16000,
+            hop_length=160,
+            fmin=55,
+            fmax=650,
+            model="tiny",
+            batch_size=512,
+            decoder=torchcrepe.decode.viterbi,
+            device="cpu",
+            return_periodicity=True
+        )
+    raw_pitch = f0[0].cpu().numpy()
+    periodicity = periodicity[0].cpu().numpy()
+    T = len(raw_pitch)
+    times = np.arange(T) * 0.01
+
+    voiced_mask = (periodicity > 0.38) & (raw_pitch > 55.0)
+    med_pitch = median_filter(raw_pitch, size=11)
+
+    # 2. Rock-Solid Adhara Shadja (Sa) Identification
+    if effective_tonic and effective_tonic > 50.0:
+        sa_hz = round(float(effective_tonic), 1)
+        w = hz_to_western(sa_hz)
+        sa_note_str = w["noteStr"]
+        sa_conf = 1.0
+        sa_oct = w["octave"]
+    else:
+        plateaus = extract_pitch_plateaus(times, med_pitch, voiced_mask)
+        sa_hz, sa_note_str, sa_conf, sa_oct = auto_detect_tonic_sa(plateaus, raw_pitch[voiced_mask], user_hint_hz=effective_tonic)
+
+    # 3. Dual-Stream Swara Segmentation (Syllable Articulations + Pitch States)
+    notes = segment_swaras(times, raw_pitch, med_pitch, voiced_mask, sa_hz, sr, 160, audio, raga=effective_raga)
+
+    # 4. Continuous Trajectories for Visual Pitch Graph
+    step = 2
+    time_steps = [round(float(i * 0.01), 3) for i in range(0, T, step)]
+    pitches_out = [round(float(raw_pitch[i]), 1) if voiced_mask[i] else 0.0 for i in range(0, T, step)]
+    conf_out = [round(float(periodicity[i]), 2) for i in range(0, T, step)]
+
+    return {
+        "success": True,
+        "duration": round(float(T * 0.01), 2),
+        "totalNotes": len(notes),
+        "tonic": {
+            "tonicFreq": sa_hz,
+            "saHz": sa_hz,
+            "tonicWestern": sa_note_str,
+            "note": sa_note_str,
+            "confidence": sa_conf,
+            "octave": sa_oct,
+            "method": "Indian Classical Consonance Harmonic Template"
+        },
+        "notes": notes,
+        "timeSteps": time_steps,
+        "pitches": pitches_out,
+        "confidences": conf_out
+    }
 
 if __name__ == "__main__":
     import uvicorn

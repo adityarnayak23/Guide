@@ -136,7 +136,7 @@ export async function conditionVocalAudio(audioBuffer) {
  * Primary Recognition Orchestrator:
  * Attempts high-precision TorchCrepe backend first, with robust client-side fallback.
  */
-export async function recognizeVocalNotes(audioBlobOrBuffer, maybeBuffer, onProgress = () => {}, customTonicFreq = null) {
+export async function recognizeVocalNotes(audioBlobOrBuffer, maybeBuffer, onProgress = () => {}, customTonicFreq = null, ragaName = null) {
   let blob = null;
   let rawBuffer = null;
 
@@ -158,9 +158,17 @@ export async function recognizeVocalNotes(audioBlobOrBuffer, maybeBuffer, onProg
       const formData = new FormData();
       formData.append('file', blob, 'vocal_take.wav');
       let url = '/api/analyze-vocal';
+      const params = [];
       if (customTonicFreq && customTonicFreq > 50) {
         formData.append('tonic_freq', String(customTonicFreq));
-        url += `?tonic_freq=${encodeURIComponent(customTonicFreq)}`;
+        params.push(`tonic_freq=${encodeURIComponent(customTonicFreq)}`);
+      }
+      if (ragaName) {
+        formData.append('raga', ragaName);
+        params.push(`raga=${encodeURIComponent(ragaName)}`);
+      }
+      if (params.length > 0) {
+        url += `?${params.join('&')}`;
       }
 
       const response = await fetch(url, {
@@ -470,10 +478,11 @@ function autoDetectClientTonicSa(pitches, confidences, times) {
 
   const candidates = [];
   for (const p of plateaus) {
-    candidates.push(p.hz);
-    candidates.push(p.hz / 2);
+    if (p.hz >= 115 && p.hz <= 310) candidates.push(p.hz);
+    if (p.hz >= 230 && p.hz <= 620) candidates.push(p.hz / 2);
+    if (p.hz >= 65 && p.hz <= 155) candidates.push(p.hz * 2);
   }
-  const uniqueCands = [...new Set(candidates)].filter(c => c >= 85 && c <= 350).sort((a, b) => a - b);
+  const uniqueCands = [...new Set(candidates.map(c => Number(c.toFixed(1))))].filter(c => c >= 115 && c <= 310).sort((a, b) => a - b);
 
   let bestScore = -1;
   let bestSa = uniqueCands[0] || 146.8;
@@ -482,6 +491,8 @@ function autoDetectClientTonicSa(pitches, confidences, times) {
     const eSa = energyAtCents(s, 0);
     const eTaarSa = energyAtCents(s, 1200);
     const ePa = energyAtCents(s, 700);
+    const eMandraPa = energyAtCents(s, -500);
+    const eMandraDha = energyAtCents(s, -300);
     const eMa = energyAtCents(s, 500);
     const eGa = Math.max(energyAtCents(s, 400), energyAtCents(s, 300));
     const eRe = Math.max(energyAtCents(s, 200), energyAtCents(s, 100));
@@ -489,18 +500,19 @@ function autoDetectClientTonicSa(pitches, confidences, times) {
     const eNi = Math.max(energyAtCents(s, 1100), energyAtCents(s, 1000));
 
     let score = (
-      eSa * 2.5 +
-      eTaarSa * 2.0 +
+      eSa * 4.0 +
+      eTaarSa * 3.0 +
       ePa * 2.5 +
-      eMa * 1.5 +
-      eGa * 1.2 +
-      eRe * 1.0 +
+      eMandraPa * 2.0 +
+      eMandraDha * 1.5 +
+      eMa * 1.2 +
+      eRe * 1.2 +
+      eGa * 1.0 +
       eDha * 1.0 +
-      eNi * 1.0
+      eNi * 0.8
     );
 
-    if (eSa < 0.15 && eTaarSa < 0.15) score *= 0.2;
-    if (ePa < 0.08 && eMa < 0.08) score *= 0.1;
+    if (eSa < 0.12 && eTaarSa < 0.12) score *= 0.25;
 
     if (score > bestScore) {
       bestScore = score;
@@ -511,8 +523,8 @@ function autoDetectClientTonicSa(pitches, confidences, times) {
   // Refine
   const matches = [];
   for (const p of plateaus) {
-    if (Math.abs(1200 * Math.log2(p.hz / bestSa)) <= 40) matches.push(p.hz);
-    if (Math.abs(1200 * Math.log2((p.hz / 2) / bestSa)) <= 40) matches.push(p.hz / 2);
+    if (Math.abs(1200 * Math.log2(p.hz / bestSa)) <= 35) matches.push(p.hz);
+    if (Math.abs(1200 * Math.log2((p.hz / 2) / bestSa)) <= 35) matches.push(p.hz / 2);
   }
   const finalSa = matches.length > 0 ? matches.reduce((a, b) => a + b, 0) / matches.length : bestSa;
   const western = hzToWesternNote(finalSa);
@@ -520,7 +532,7 @@ function autoDetectClientTonicSa(pitches, confidences, times) {
   return {
     tonicFreq: Number(finalSa.toFixed(1)),
     tonicWestern: western.noteStr,
-    confidence: Number(Math.min(1.0, Math.max(0.6, bestScore / 6.0)).toFixed(2)),
+    confidence: Number(Math.min(1.0, Math.max(0.65, bestScore / 6.0)).toFixed(2)),
     octave: western.octave,
   };
 }

@@ -398,11 +398,21 @@ class VocalSwaraEngine:
         else:
             sa_hz, sa_note_str, sa_conf, sa_oct = self.auto_detect_tonic_sa(times, f0, periodicity)
 
-        # 3. Path B: Conformer CTC Decoding
-        if self.conformer is not None:
-            notes = self._analyze_with_conformer(y, sr, sa_hz, f0, periodicity, T, times)
+        # 3. Dual-Stream Swara Segmentation (High Accuracy Grounded MIR)
+        import vocal_ai_server as vs
+        plateaus = self.extract_pitch_plateaus(times, median_filter(f0, size=11), (periodicity > 0.38) & (f0 > 55.0))
+        if user_sa_hz and user_sa_hz > 50.0:
+            sa_hz = round(float(user_sa_hz), 1)
+            w = hz_to_western(sa_hz)
+            sa_note_str = w['noteStr']
+            sa_conf = 1.0
+            sa_oct = w['octave']
         else:
-            notes = parametric_engine.analyze(y, sr=sr, raga=raga, user_sa_hz=sa_hz).get("notes", [])
+            sa_hz, sa_note_str, sa_conf, sa_oct = vs.auto_detect_tonic_sa(plateaus, f0[(periodicity > 0.38) & (f0 > 55.0)])
+
+        voiced_mask = (periodicity > 0.38) & (f0 > 55.0)
+        med_pitch = median_filter(f0, size=11)
+        notes = vs.segment_swaras(times, f0, med_pitch, voiced_mask, sa_hz, sr, 160, y)
 
         # 4. Format Continuous Trajectories for UI
         step = 2
